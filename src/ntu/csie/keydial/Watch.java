@@ -29,10 +29,11 @@ public class Watch extends Parent {
 	Dial numberDial;
 	Dial emojiDial;
 
-	Text display = new Text();
+	Text inputDisplay = new Text();
+	Text predictionDisplay = new Text();
 	Group background = new Group();
-	StopWatchButton startButton;
-	StopWatchButton stopButton;
+	StopWatchButton startButton = new StopWatchButton(Color.web("#8cc700"), Color.web("#71a000"));
+	StopWatchButton stopButton = new StopWatchButton(Color.web("#AA0000"), Color.web("#660000"));
 
 	static Font TEXT_FONT = new Font(16);
 	static Font EMOJI_FONT = Font.loadFont(Dial.class.getResourceAsStream("OpenSansEmoji.ttf"), 16);
@@ -91,6 +92,7 @@ public class Watch extends Parent {
 		case "⏎":
 			submit(text());
 			buffer.position(0);
+			predict();
 			break;
 		case "⌴":
 			append(" ");
@@ -99,6 +101,7 @@ public class Watch extends Parent {
 			if (buffer.position() > 0) {
 				buffer.position(buffer.position() - 4); // UTF-32 is fixed size (even for 4 byte emoji)
 			}
+			predict();
 			break;
 		case "#":
 			mode = 1;
@@ -113,41 +116,62 @@ public class Watch extends Parent {
 			update();
 			break;
 		default:
-			if (key.matches("\\d") || key.length() > 1) {
+			if (key.matches("[^A-Z]")) {
 				mode = 0;
 				index = 0;
 				keys = getAlphaKeys();
 				update();
 			}
-			append(key);
+			append(key.toLowerCase());
+			predict();
 		}
 
-		display.setText(text());
+		inputDisplay.setText(text());
 	}
 
 	void submit(String value) {
 		System.out.println("SUBMIT = " + value);
 	}
 
-	public Watch() {
-		startButton = new StopWatchButton(Color.web("#8cc700"), Color.web("#71a000"));
-		stopButton = new StopWatchButton(Color.web("#AA0000"), Color.web("#660000"));
+	Prediction predictor = new Prediction();
 
+	void predict() {
+		String[] input = text().split("\\s");
+		if (input.length > 0) {
+			String prefix = input[input.length - 1];
+			if (prefix.length() > 0) {
+				List<String> words = predictor.complete(prefix, 5);
+				predictionDisplay.setText(String.join("\n", words));
+				return;
+			}
+		}
+		predictionDisplay.setText("");
+	}
+
+	public Watch() {
 		alphaDial = new Dial(117, Color.RED, getAlphaKeys(), TEXT_FONT);
 		numberDial = new Dial(114, Color.GREENYELLOW, getNumberKeys(), TEXT_FONT);
 		emojiDial = new Dial(114, Color.GOLD, getEmojiKeys(), EMOJI_FONT);
 
-		display.setBoundsType(TextBoundsType.VISUAL);
-		display.setTextAlignment(TextAlignment.CENTER);
-		display.setTextOrigin(VPos.BOTTOM);
-		display.setLayoutX(90);
-		display.setLayoutY(210);
-		display.setWrappingWidth(100);
-		display.setFont(EMOJI_FONT);
+		inputDisplay.setBoundsType(TextBoundsType.VISUAL);
+		inputDisplay.setTextAlignment(TextAlignment.CENTER);
+		inputDisplay.setTextOrigin(VPos.BOTTOM);
+		inputDisplay.setLayoutX(90);
+		inputDisplay.setLayoutY(210);
+		inputDisplay.setWrappingWidth(100);
+		inputDisplay.setFont(EMOJI_FONT);
+
+		predictionDisplay.setBoundsType(TextBoundsType.VISUAL);
+		predictionDisplay.setTextAlignment(TextAlignment.LEFT);
+		predictionDisplay.setTextOrigin(VPos.CENTER);
+		predictionDisplay.setLayoutX(170);
+		predictionDisplay.setLayoutY(140);
+		predictionDisplay.setWrappingWidth(100);
+		predictionDisplay.setFont(new Font(12));
 
 		configureBackground();
 		myLayout();
-		getChildren().addAll(background, display, alphaDial, numberDial, emojiDial, startButton, stopButton);
+		getChildren().addAll(background, inputDisplay, predictionDisplay, alphaDial, numberDial, emojiDial, startButton, stopButton);
 
 		update();
 	}
