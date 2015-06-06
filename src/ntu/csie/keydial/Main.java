@@ -10,6 +10,7 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
+import javafx.stage.StageStyle;
 
 public class Main extends Application {
 
@@ -23,7 +24,8 @@ public class Main extends Application {
 		watch.setLayoutX(15);
 		watch.setLayoutY(20);
 
-		stage.setScene(new Scene(watch, Color.WHITE));
+		stage.setScene(new Scene(watch, Color.TRANSPARENT));
+		stage.initStyle(StageStyle.TRANSPARENT);
 		stage.show();
 
 		stage.getScene().setOnKeyPressed((evt) -> {
