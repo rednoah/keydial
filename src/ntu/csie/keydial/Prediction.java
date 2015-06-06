@@ -15,8 +15,7 @@ public class Prediction {
 
 	public List<String> complete(String s, int limit) {
 		String from = s;
-		String to = s.substring(0, s.length() - 1) + (char) (s.charAt(s.length() - 1) + 1);
-
+		String to = from + 'z';
 		NavigableMap<String, Integer> subMap = corpus.subMap(from, true, to, true);
 
 		return subMap.entrySet().stream().sorted((o2, o1) -> o1.getValue().compareTo(o2.getValue())).limit(limit).map((m) -> m.getKey()).collect(Collectors.toList());

@@ -59,7 +59,7 @@ public class Dial extends Parent {
 	private Text createNumber(String number, double layoutX, double layoutY) {
 		Text text = new Text(number);
 		text.setTextAlignment(TextAlignment.CENTER);
-		text.setWrappingWidth(font.getSize());
+		text.setWrappingWidth(100);
 		text.setTextOrigin(VPos.CENTER);
 		text.setFill(fill);
 

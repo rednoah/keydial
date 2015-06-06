@@ -1,5 +1,7 @@
 package ntu.csie.keydial;
 
+import static java.util.Collections.*;
+
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
@@ -28,6 +30,7 @@ public class Watch extends Parent {
 	Dial alphaDial;
 	Dial numberDial;
 	Dial emojiDial;
+	Dial predictionDial;
 
 	Text inputDisplay = new Text();
 	Text predictionDisplay = new Text();
@@ -38,29 +41,21 @@ public class Watch extends Parent {
 	static Font TEXT_FONT = new Font(16);
 	static Font EMOJI_FONT = Font.loadFont(Dial.class.getResourceAsStream("OpenSansEmoji.ttf"), 16);
 
-	static Charset ENCODING = Charset.forName("UTF-32");
-	ByteBuffer buffer = ByteBuffer.allocate(1024);
-
-	void append(String s) {
-		buffer.put(ENCODING.encode(s));
-	}
-
-	String text() {
-		ByteBuffer view = buffer.duplicate();
-		view.position(0);
-		view.limit(buffer.position());
-		return ENCODING.decode(view).toString();
-	}
+	String buffer = "";
 
 	int mode = 0;
 	int index = 0;
 	List<String> keys = getAlphaKeys();
+	List<String> options = emptyList();
 
 	List<String> getNumberKeys() {
 		List<String> keys = new ArrayList<String>();
 		for (char c = '0'; c <= '9'; c++) {
 			keys.add(String.valueOf(c));
 		}
+		"$%@'.…!?".codePoints().forEach((c) -> {
+			keys.add(new String(Character.toChars(c)));
+		});
 		return keys;
 	}
 
@@ -90,16 +85,17 @@ public class Watch extends Parent {
 	void apply(String key) throws Exception {
 		switch (key) {
 		case "⏎":
-			submit(text());
-			buffer.position(0);
+			submit(buffer);
+			buffer = "";
 			predict();
 			break;
 		case "⌴":
-			append(" ");
+			buffer += " ";
+			predict();
 			break;
 		case "⌫":
-			if (buffer.position() > 0) {
-				buffer.position(buffer.position() - 4); // UTF-32 is fixed size (even for 4 byte emoji)
+			if (buffer.length() > 0) {
+				buffer = buffer.substring(0, buffer.length() - 1);
 			}
 			predict();
 			break;
@@ -107,26 +103,28 @@ public class Watch extends Parent {
 			mode = 1;
 			index = 0;
 			keys = getNumberKeys();
-			update();
 			break;
 		case "😀":
 			mode = 2;
 			index = 0;
 			keys = getEmojiKeys();
-			update();
 			break;
 		default:
-			if (key.matches("[^A-Z]")) {
+			if (mode != 3) {
+				buffer = buffer + key.toLowerCase();
+			} else {
+				buffer = buffer.substring(0, buffer.lastIndexOf(" ") + 1) + key + " ";
+			}
+			predict();
+
+			if (mode != 0) {
 				mode = 0;
 				index = 0;
 				keys = getAlphaKeys();
-				update();
 			}
-			append(key.toLowerCase());
-			predict();
 		}
 
-		inputDisplay.setText(text());
+		update();
 	}
 
 	void submit(String value) {
@@ -136,22 +134,28 @@ public class Watch extends Parent {
 	Prediction predictor = new Prediction();
 
 	void predict() {
-		String[] input = text().split("\\s");
-		if (input.length > 0) {
-			String prefix = input[input.length - 1];
-			if (prefix.length() > 0) {
-				List<String> words = predictor.complete(prefix, 5);
-				predictionDisplay.setText(String.join("\n", words));
-				return;
+		predict(6);
+	}
+
+	void predict(int limit) {
+		if (buffer.matches("^.*[a-z]+$")) {
+			String[] input = buffer.split("\\s");
+			if (input.length > 0) {
+				String prefix = input[input.length - 1];
+				if (prefix.length() > 0) {
+					options = predictor.complete(prefix, limit);
+					return;
+				}
 			}
 		}
-		predictionDisplay.setText("");
+		options = emptyList();
 	}
 
 	public Watch() {
 		alphaDial = new Dial(117, Color.RED, getAlphaKeys(), TEXT_FONT);
 		numberDial = new Dial(114, Color.GREENYELLOW, getNumberKeys(), TEXT_FONT);
 		emojiDial = new Dial(114, Color.GOLD, getEmojiKeys(), EMOJI_FONT);
+		predictionDial = new Dial(0, Color.BLACK, options, TEXT_FONT);
 
 		inputDisplay.setBoundsType(TextBoundsType.VISUAL);
 		inputDisplay.setTextAlignment(TextAlignment.CENTER);
@@ -165,7 +169,7 @@ public class Watch extends Parent {
 		predictionDisplay.setTextAlignment(TextAlignment.LEFT);
 		predictionDisplay.setTextOrigin(VPos.CENTER);
 		predictionDisplay.setLayoutX(170);
-		predictionDisplay.setLayoutY(140);
+		predictionDisplay.setLayoutY(130);
 		predictionDisplay.setWrappingWidth(100);
 		predictionDisplay.setFont(new Font(12));
 
@@ -177,27 +181,39 @@ public class Watch extends Parent {
 	}
 
 	void update() {
+		inputDisplay.setText(buffer + "_");
+		predictionDisplay.setText(String.join("\n", options));
+
 		double angleStep = (Math.PI * 2) / keys.size();
 		double indexAngle = index * angleStep;
-
 		switch (mode) {
 		case 0:
 			alphaDial.setAngle(Math.toDegrees(indexAngle));
 			alphaDial.setVisible(true);
 			numberDial.setVisible(false);
 			emojiDial.setVisible(false);
+			predictionDial.setVisible(false);
 			break;
 		case 1:
 			numberDial.setAngle(Math.toDegrees(indexAngle));
 			alphaDial.setVisible(false);
 			numberDial.setVisible(true);
 			emojiDial.setVisible(false);
+			predictionDial.setVisible(false);
 			break;
 		case 2:
 			emojiDial.setAngle(Math.toDegrees(indexAngle));
 			alphaDial.setVisible(false);
 			numberDial.setVisible(false);
 			emojiDial.setVisible(true);
+			predictionDial.setVisible(false);
+			break;
+		case 3:
+			predictionDial.setAngle(Math.toDegrees(indexAngle));
+			alphaDial.setVisible(false);
+			numberDial.setVisible(false);
+			emojiDial.setVisible(false);
+			predictionDial.setVisible(true);
 			break;
 		}
 	}
@@ -229,6 +245,33 @@ public class Watch extends Parent {
 			e.printStackTrace();
 		}
 
+		doPressButton(startButton, stopButton);
+	}
+
+	void select() {
+		if (mode == 3) {
+			predict(12);
+			sort(options, String.CASE_INSENSITIVE_ORDER);
+		}
+
+		if ((mode != 0 && mode != 3) || options.isEmpty()) {
+			return;
+		}
+
+		if (predictionDial != null) {
+			getChildren().remove(predictionDial);
+		}
+		predictionDial = new Dial(100, Color.ROYALBLUE, options, Font.font(12));
+		predictionDial.setLayoutX(140);
+		predictionDial.setLayoutY(140);
+		getChildren().add(predictionDial);
+
+		mode = 3;
+		index = 0;
+		keys = options;
+		options = emptyList();
+
+		update();
 		doPressButton(startButton, stopButton);
 	}
 
