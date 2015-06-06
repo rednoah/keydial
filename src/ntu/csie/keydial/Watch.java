@@ -24,21 +24,32 @@ import javafx.scene.transform.Rotate;
 import javafx.util.Duration;
 
 public class Watch extends Parent {
-	// visual nodes
-	private final Dial alphaDial;
-	private final Dial numberDial;
-	private final Dial emojiDial;
-	private final Group background = new Group();
-	private final StopWatchButton startButton;
-	private final StopWatchButton stopButton;
 
-	static final Font TEXT_FONT = new Font(16);
-	static final Font EMOJI_FONT = Font.loadFont(Dial.class.getResourceAsStream("OpenSansEmoji.ttf"), 16);
+	Dial alphaDial;
+	Dial numberDial;
+	Dial emojiDial;
 
-	Text text = new Text();
+	Text display = new Text();
+	Group background = new Group();
+	StopWatchButton startButton;
+	StopWatchButton stopButton;
 
-	static final Charset ENCODING = Charset.forName("UTF-32");
+	static Font TEXT_FONT = new Font(16);
+	static Font EMOJI_FONT = Font.loadFont(Dial.class.getResourceAsStream("OpenSansEmoji.ttf"), 16);
+
+	static Charset ENCODING = Charset.forName("UTF-32");
 	ByteBuffer buffer = ByteBuffer.allocate(1024);
+
+	void append(String s) {
+		buffer.put(ENCODING.encode(s));
+	}
+
+	String text() {
+		ByteBuffer view = buffer.duplicate();
+		view.position(0);
+		view.limit(buffer.position());
+		return ENCODING.decode(view).toString();
+	}
 
 	int mode = 0;
 	int index = 0;
@@ -78,10 +89,11 @@ public class Watch extends Parent {
 	void apply(String key) throws Exception {
 		switch (key) {
 		case "⏎":
+			submit(text());
 			buffer.position(0);
 			break;
 		case "⌴":
-			buffer.put(ENCODING.encode(" "));
+			append(" ");
 			break;
 		case "⌫":
 			if (buffer.position() > 0) {
@@ -107,16 +119,17 @@ public class Watch extends Parent {
 				keys = getAlphaKeys();
 				update();
 			}
-			buffer.put(ENCODING.encode(key));
+			append(key);
 		}
 
-		ByteBuffer view = buffer.duplicate();
-		view.position(0);
-		view.limit(buffer.position());
-		text.setText(ENCODING.decode(view).toString());
+		display.setText(text());
 	}
 
-	Watch() {
+	void submit(String value) {
+		System.out.println("SUBMIT = " + value);
+	}
+
+	public Watch() {
 		startButton = new StopWatchButton(Color.web("#8cc700"), Color.web("#71a000"));
 		stopButton = new StopWatchButton(Color.web("#AA0000"), Color.web("#660000"));
 
@@ -124,17 +137,17 @@ public class Watch extends Parent {
 		numberDial = new Dial(114, Color.GREENYELLOW, getNumberKeys(), TEXT_FONT);
 		emojiDial = new Dial(114, Color.GOLD, getEmojiKeys(), EMOJI_FONT);
 
-		text.setBoundsType(TextBoundsType.VISUAL);
-		text.setTextAlignment(TextAlignment.CENTER);
-		text.setTextOrigin(VPos.BOTTOM);
-		text.setLayoutX(90);
-		text.setLayoutY(210);
-		text.setWrappingWidth(100);
-		text.setFont(EMOJI_FONT);
+		display.setBoundsType(TextBoundsType.VISUAL);
+		display.setTextAlignment(TextAlignment.CENTER);
+		display.setTextOrigin(VPos.BOTTOM);
+		display.setLayoutX(90);
+		display.setLayoutY(210);
+		display.setWrappingWidth(100);
+		display.setFont(EMOJI_FONT);
 
 		configureBackground();
 		myLayout();
-		getChildren().addAll(background, text, alphaDial, numberDial, emojiDial, startButton, stopButton);
+		getChildren().addAll(background, display, alphaDial, numberDial, emojiDial, startButton, stopButton);
 
 		update();
 	}
@@ -184,7 +197,7 @@ public class Watch extends Parent {
 
 	void enter() {
 		String key = keys.get(index);
-		System.out.println("key = " + key);
+		System.out.println("KEY = " + key);
 
 		try {
 			apply(key);

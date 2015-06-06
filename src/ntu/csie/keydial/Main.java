@@ -1,23 +1,32 @@
 package ntu.csie.keydial;
 
-import gnu.io.CommPortIdentifier;
+import java.io.FileInputStream;
+import java.io.InputStream;
+
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.scene.Scene;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 
 public class Main extends Application {
 
+	public static void main(String[] args) {
+		launch(args);
+	}
+
 	@Override
-	public void start(Stage primaryStage) throws Exception {
+	public void start(Stage stage) throws Exception {
 		Watch watch = new Watch();
 		watch.setLayoutX(15);
 		watch.setLayoutY(20);
 
-		primaryStage.setScene(new Scene(watch, Color.WHITE));
-		primaryStage.show();
+		stage.setScene(new Scene(watch, Color.WHITE));
+		stage.show();
 
-		primaryStage.getScene().setOnKeyPressed((evt) -> {
+		stage.getScene().setOnKeyPressed((evt) -> {
 			switch (evt.getCode()) {
 			case SPACE:
 				watch.enter();
@@ -32,10 +41,24 @@ public class Main extends Application {
 				break;
 			}
 		});
+
+		new Thread(() -> {
+			try (InputStream in = getSerialInputStream()) {
+				int b = 0;
+				while ((b = in.read()) > 0) {
+					final KeyCode code = b == 'L' ? KeyCode.LEFT : b == 'R' ? KeyCode.RIGHT : KeyCode.SPACE;
+					Platform.runLater(() -> {
+						stage.getScene().getOnKeyPressed().handle(new KeyEvent(KeyEvent.KEY_PRESSED, "", "", code, false, false, false, false));
+					});
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}).start();
 	}
 
-	public static void main(String[] args) {
-		launch(args);
+	static InputStream getSerialInputStream() throws Exception {
+		return new FileInputStream("serial.txt");
 	}
 
 }
