@@ -98,7 +98,7 @@ public class Watch extends Parent {
 				int offset = 6;
 				int n = 12;
 				List<String> options = Prediction.getInstance().completeSentence(input, offset + n);
-				return options.stream().skip(offset).limit(n).collect(Collectors.toList());
+				return options.stream().skip(offset).limit(n).sorted(String.CASE_INSENSITIVE_ORDER).collect(Collectors.toList());
 			}
 		},
 
@@ -109,7 +109,7 @@ public class Watch extends Parent {
 				int offset = 6 + 12;
 				int n = 12;
 				List<String> options = Prediction.getInstance().completeSentence(input, offset + n);
-				return options.stream().skip(offset).limit(n).collect(Collectors.toList());
+				return options.stream().skip(offset).limit(n).sorted(String.CASE_INSENSITIVE_ORDER).collect(Collectors.toList());
 			}
 		};
 
