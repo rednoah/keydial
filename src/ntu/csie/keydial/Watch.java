@@ -1,6 +1,8 @@
 package ntu.csie.keydial;
 
+import static java.util.Arrays.*;
 import static java.util.Collections.*;
+import static ntu.csie.keydial.Stats.*;
 
 import java.util.ArrayList;
 import java.util.EnumSet;
@@ -39,6 +41,8 @@ public class Watch extends Parent {
 	static final String SMILEY = "😀";
 	static final String BACKSPACE = "⌫";
 	static final String CARET = "_";
+
+	static final List<String> CONTROL_KEYS = asList(RETURN, HASH, SMILEY, BACKSPACE);
 
 	enum Mode {
 
@@ -176,9 +180,11 @@ public class Watch extends Parent {
 	}
 
 	void apply(String key) throws Exception {
+		stats.record(key);
+
 		switch (key) {
 		case RETURN:
-			submit(buffer);
+			submit(buffer.trim());
 			buffer = "";
 			break;
 		case SPACE:
@@ -192,7 +198,7 @@ public class Watch extends Parent {
 		case HASH:
 			setMode(Mode.Number);
 			break;
-		case "😀":
+		case SMILEY:
 			setMode(Mode.Emoji);
 			break;
 		default:
@@ -211,7 +217,11 @@ public class Watch extends Parent {
 	}
 
 	void submit(String value) {
+		if (value.isEmpty())
+			return;
+
 		System.out.println("SUBMIT = " + value);
+		stats.endRecord(value);
 	}
 
 	Dial createDial(Mode mode) {

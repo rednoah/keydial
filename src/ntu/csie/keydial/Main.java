@@ -1,5 +1,7 @@
 package ntu.csie.keydial;
 
+import static ntu.csie.keydial.Stats.*;
+
 import java.io.FileInputStream;
 import java.io.InputStream;
 
@@ -7,6 +9,7 @@ import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.event.EventHandler;
 import javafx.scene.Scene;
+import javafx.scene.control.TextInputDialog;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseButton;
@@ -76,19 +79,23 @@ public class Main extends Application {
 			case LEFT:
 				watch.left();
 				break;
-			case DOWN:
+			case SHIFT:
 				watch.select();
 				break;
-			default:
+			case TAB:
+				TextInputDialog dialog = new TextInputDialog("USER");
+				dialog.setHeaderText("Start Test");
+				dialog.showAndWait().ifPresent(name -> stats.setUser(name));
 				break;
 			}
 		});
 
+		// read input events via serial port
 		Thread eventReader = new Thread(() -> {
 			try (InputStream in = getSerialInputStream()) {
 				int b = 0;
 				while ((b = in.read()) > 0) {
-					final KeyCode code = b == 'L' ? KeyCode.LEFT : b == 'R' ? KeyCode.RIGHT : b == '*' ? KeyCode.DOWN : KeyCode.SPACE;
+					final KeyCode code = b == 'L' ? KeyCode.LEFT : b == 'R' ? KeyCode.RIGHT : b == '*' ? KeyCode.SHIFT : KeyCode.SPACE;
 					Platform.runLater(() -> {
 						stage.getScene().getOnKeyPressed().handle(new KeyEvent(KeyEvent.KEY_PRESSED, "", "", code, false, false, false, false));
 					});
@@ -97,7 +104,7 @@ public class Main extends Application {
 				e.printStackTrace();
 			}
 		});
-		eventReader.start();
+		// eventReader.start();
 	}
 
 	static InputStream getSerialInputStream() throws Exception {
