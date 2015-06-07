@@ -5,9 +5,12 @@ import java.io.InputStream;
 
 import javafx.application.Application;
 import javafx.application.Platform;
+import javafx.event.EventHandler;
 import javafx.scene.Scene;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.input.MouseButton;
+import javafx.scene.input.RotateEvent;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
@@ -28,6 +31,40 @@ public class Main extends Application {
 		stage.initStyle(StageStyle.TRANSPARENT);
 		stage.show();
 
+		// touch input
+		stage.getScene().setOnRotate(new EventHandler<RotateEvent>() {
+
+			double sum = 0, speed = 0.5;
+
+			@Override
+			public void handle(RotateEvent evt) {
+				sum += speed * evt.getAngle();
+				if (sum < -1) {
+					watch.left();
+					sum = 0;
+				}
+				if (sum > +1) {
+					watch.right();
+					sum = 0;
+				}
+			}
+		});
+
+		// mouse input
+		stage.getScene().setOnMouseClicked((evt) -> {
+			if (evt.getButton() == MouseButton.PRIMARY)
+				watch.enter();
+			if (evt.getButton() == MouseButton.SECONDARY)
+				watch.select();
+		});
+		stage.getScene().setOnScroll((evt) -> {
+			if (evt.getDeltaY() < 0)
+				watch.left();
+			if (evt.getDeltaY() > 0)
+				watch.right();
+		});
+
+		// keyboard input
 		stage.getScene().setOnKeyPressed((evt) -> {
 			switch (evt.getCode()) {
 			case SPACE:
