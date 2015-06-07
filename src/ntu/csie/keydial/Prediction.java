@@ -25,7 +25,7 @@ public class Prediction {
 
 	TreeMap<String, Integer> corpus = new TreeMap<String, Integer>(String.CASE_INSENSITIVE_ORDER);
 
-	Pattern SENTENCE = Pattern.compile("^.*[a-z]+$", Pattern.CASE_INSENSITIVE);
+	Pattern SENTENCE = Pattern.compile("^.*\\w+$", Pattern.CASE_INSENSITIVE);
 	Pattern SPACE = Pattern.compile("\\s+");
 
 	public List<String> completeSentence(String s, int limit) {

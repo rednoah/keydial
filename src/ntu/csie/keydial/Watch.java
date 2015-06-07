@@ -2,16 +2,11 @@ package ntu.csie.keydial;
 
 import static java.util.Collections.*;
 
-import java.nio.ByteBuffer;
-import java.nio.charset.Charset;
 import java.util.ArrayList;
-import java.util.EnumMap;
 import java.util.EnumSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
@@ -34,7 +29,8 @@ import javafx.util.Duration;
 public class Watch extends Parent {
 
 	static final Font TEXT_FONT = new Font(16);
-	static final Font EMOJI_FONT = Font.loadFont(Dial.class.getResourceAsStream("OpenSansEmoji.ttf"), 16);
+	static final Font TEXT_EMOJI_FONT = Font.loadFont(Dial.class.getResourceAsStream("OpenSansEmoji.ttf"), 16);
+	static final Font EMOJI_FONT = Font.loadFont(Dial.class.getResourceAsStream("OpenSansEmoji.ttf"), 24);
 	static final Font PREDICTION_FONT = new Font(12);
 
 	static final String RETURN = "⏎";
@@ -42,6 +38,7 @@ public class Watch extends Parent {
 	static final String HASH = "#";
 	static final String SMILEY = "😀";
 	static final String BACKSPACE = "⌫";
+	static final String CARET = "_";
 
 	enum Mode {
 
@@ -67,7 +64,7 @@ public class Watch extends Parent {
 			@Override
 			List<String> getKeys(String input) {
 				List<String> keys = new ArrayList<String>();
-				"0123456789$%@'.…!?".codePoints().forEach((c) -> {
+				"0123456789$%:.…@'!?".codePoints().forEach((c) -> {
 					keys.add(new String(Character.toChars(c)));
 				});
 				return keys;
@@ -165,8 +162,13 @@ public class Watch extends Parent {
 				getChildren().remove(dial);
 			}
 			dial = createDial(mode);
-			dial.setLayoutX(140);
-			dial.setLayoutY(140);
+			if (mode == Mode.Emoji) {
+				dial.setLayoutX(140);
+				dial.setLayoutY(145);
+			} else {
+				dial.setLayoutX(140);
+				dial.setLayoutY(140);
+			}
 			getChildren().add(dial);
 
 			update();
@@ -219,7 +221,7 @@ public class Watch extends Parent {
 		case Number:
 			return new Dial(114, Color.GREENYELLOW, mode.getKeys(buffer), TEXT_FONT);
 		case Emoji:
-			return new Dial(114, Color.GOLD, mode.getKeys(buffer), EMOJI_FONT);
+			return new Dial(110, Color.GOLD, mode.getKeys(buffer), EMOJI_FONT);
 		default:
 			return new Dial(100, Color.ROYALBLUE, mode.getKeys(buffer), PREDICTION_FONT);
 		}
@@ -233,7 +235,7 @@ public class Watch extends Parent {
 		inputDisplay.setLayoutX(90);
 		inputDisplay.setLayoutY(210);
 		inputDisplay.setWrappingWidth(100);
-		inputDisplay.setFont(EMOJI_FONT);
+		inputDisplay.setFont(TEXT_EMOJI_FONT);
 
 		predictionDisplay.setBoundsType(TextBoundsType.VISUAL);
 		predictionDisplay.setTextAlignment(TextAlignment.LEFT);
@@ -301,7 +303,7 @@ public class Watch extends Parent {
 	}
 
 	void update() {
-		inputDisplay.setText(buffer + "_");
+		inputDisplay.setText(buffer + CARET);
 		predictionDisplay.setText(String.join("\n", options));
 
 		double angleStep = (Math.PI * 2) / mode.getKeys(buffer).size();

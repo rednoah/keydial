@@ -63,8 +63,8 @@ public class Dial extends Parent {
 		text.setTextOrigin(VPos.CENTER);
 		text.setFill(fill);
 
-		if ("😀".equals(number)) {
-			text.setFont(Watch.EMOJI_FONT);
+		if (Watch.SMILEY.equals(number)) {
+			text.setFont(Watch.TEXT_EMOJI_FONT);
 		} else {
 			text.setFont(font);
 		}

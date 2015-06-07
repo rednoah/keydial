@@ -39,7 +39,7 @@ public class Main extends Application {
 			case LEFT:
 				watch.left();
 				break;
-			case SHIFT:
+			case DOWN:
 				watch.select();
 				break;
 			default:
@@ -51,7 +51,7 @@ public class Main extends Application {
 			try (InputStream in = getSerialInputStream()) {
 				int b = 0;
 				while ((b = in.read()) > 0) {
-					final KeyCode code = b == 'L' ? KeyCode.LEFT : b == 'R' ? KeyCode.RIGHT : b == '*' ? KeyCode.SHIFT : KeyCode.SPACE;
+					final KeyCode code = b == 'L' ? KeyCode.LEFT : b == 'R' ? KeyCode.RIGHT : b == '*' ? KeyCode.DOWN : KeyCode.SPACE;
 					Platform.runLater(() -> {
 						stage.getScene().getOnKeyPressed().handle(new KeyEvent(KeyEvent.KEY_PRESSED, "", "", code, false, false, false, false));
 					});
