@@ -1,24 +1,52 @@
 package ntu.csie.keydial;
 
+import static java.util.Collections.*;
+
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
-import java.util.NavigableMap;
+import java.util.Map;
 import java.util.TreeMap;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class Prediction {
 
+	static final Prediction instance = new Prediction();
+
+	static Prediction getInstance() {
+		return instance;
+	}
+
+	static final String OMEGA = "Ω";
+
 	TreeMap<String, Integer> corpus = new TreeMap<String, Integer>(String.CASE_INSENSITIVE_ORDER);
 
-	public List<String> complete(String s, int limit) {
-		String from = s;
-		String to = from + 'z';
-		NavigableMap<String, Integer> subMap = corpus.subMap(from, true, to, true);
+	Pattern SENTENCE = Pattern.compile("^.*[a-z]+$", Pattern.CASE_INSENSITIVE);
+	Pattern SPACE = Pattern.compile("\\s+");
 
-		return subMap.entrySet().stream().sorted((o2, o1) -> o1.getValue().compareTo(o2.getValue())).limit(limit).map((m) -> m.getKey()).collect(Collectors.toList());
+	public List<String> completeSentence(String s, int limit) {
+		if (SENTENCE.matcher(s).matches()) {
+			String[] input = SPACE.split(s);
+			if (input.length > 0) {
+				String prefix = input[input.length - 1];
+				if (prefix.length() > 0) {
+					return completeWord(prefix, limit);
+				}
+			}
+		}
+		return emptyList();
+	}
+
+	public List<String> completeWord(String s, int limit) {
+		Map<String, Integer> subMap = corpus.subMap(s, s + OMEGA);
+
+		Stream<String> stream = subMap.entrySet().stream().sorted((o2, o1) -> o1.getValue().compareTo(o2.getValue())).limit(limit).map((m) -> m.getKey());
+
+		return stream.collect(Collectors.toList());
 	}
 
 	public Prediction() {

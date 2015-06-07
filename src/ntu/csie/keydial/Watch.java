@@ -5,7 +5,13 @@ import static java.util.Collections.*;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
+import java.util.EnumMap;
+import java.util.EnumSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
@@ -27,10 +33,92 @@ import javafx.util.Duration;
 
 public class Watch extends Parent {
 
-	Dial alphaDial;
-	Dial numberDial;
-	Dial emojiDial;
-	Dial predictionDial;
+	static final Font TEXT_FONT = new Font(16);
+	static final Font EMOJI_FONT = Font.loadFont(Dial.class.getResourceAsStream("OpenSansEmoji.ttf"), 16);
+	static final Font PREDICTION_FONT = new Font(12);
+
+	static final String RETURN = "⏎";
+	static final String SPACE = "⌴";
+	static final String HASH = "#";
+	static final String SMILEY = "😀";
+	static final String BACKSPACE = "⌫";
+
+	enum Mode {
+
+		Alpha {
+
+			@Override
+			List<String> getKeys(String input) {
+				List<String> keys = new ArrayList<String>();
+				keys.add(RETURN);
+				keys.add(SPACE);
+				for (char c = 'A'; c <= 'Z'; c++) {
+					keys.add(String.valueOf(c));
+				}
+				keys.add(HASH);
+				keys.add(SMILEY);
+				keys.add(BACKSPACE);
+				return keys;
+			}
+		},
+
+		Number {
+
+			@Override
+			List<String> getKeys(String input) {
+				List<String> keys = new ArrayList<String>();
+				"0123456789$%@'.…!?".codePoints().forEach((c) -> {
+					keys.add(new String(Character.toChars(c)));
+				});
+				return keys;
+			}
+		},
+
+		Emoji {
+
+			@Override
+			List<String> getKeys(String input) {
+				List<String> keys = new ArrayList<String>();
+				for (int c = 0x1F601; c <= 0x1F60F; c += 1) {
+					keys.add(new String(Character.toChars(c)));
+				}
+				return keys;
+			}
+		},
+
+		Prediction1 {
+
+			@Override
+			List<String> getKeys(String input) {
+				return Prediction.getInstance().completeSentence(input, 6);
+			}
+		},
+
+		Prediction2 {
+
+			@Override
+			List<String> getKeys(String input) {
+				int offset = 6;
+				int n = 12;
+				List<String> options = Prediction.getInstance().completeSentence(input, offset + n);
+				return options.stream().skip(offset).limit(n).collect(Collectors.toList());
+			}
+		},
+
+		Prediction3 {
+
+			@Override
+			List<String> getKeys(String input) {
+				int offset = 6 + 12;
+				int n = 12;
+				List<String> options = Prediction.getInstance().completeSentence(input, offset + n);
+				return options.stream().skip(offset).limit(n).collect(Collectors.toList());
+			}
+		};
+
+		abstract List<String> getKeys(String input);
+
+	}
 
 	Text inputDisplay = new Text();
 	Text predictionDisplay = new Text();
@@ -38,92 +126,85 @@ public class Watch extends Parent {
 	StopWatchButton startButton = new StopWatchButton(Color.web("#8cc700"), Color.web("#71a000"));
 	StopWatchButton stopButton = new StopWatchButton(Color.web("#AA0000"), Color.web("#660000"));
 
-	static Font TEXT_FONT = new Font(16);
-	static Font EMOJI_FONT = Font.loadFont(Dial.class.getResourceAsStream("OpenSansEmoji.ttf"), 16);
+	static final Mode DEFAULT_MODE = Mode.Alpha;
+	static final Set<Mode> PREDICTION_MODES = EnumSet.of(Mode.Prediction1, Mode.Prediction2, Mode.Prediction3);
 
 	String buffer = "";
 
-	int mode = 0;
-	int index = 0;
-	List<String> keys = getAlphaKeys();
+	Dial dial;
+	Mode mode;
+	int index;
 	List<String> options = emptyList();
 
-	List<String> getNumberKeys() {
-		List<String> keys = new ArrayList<String>();
-		for (char c = '0'; c <= '9'; c++) {
-			keys.add(String.valueOf(c));
-		}
-		"$%@'.…!?".codePoints().forEach((c) -> {
-			keys.add(new String(Character.toChars(c)));
-		});
-		return keys;
-	}
-
-	List<String> getEmojiKeys() {
-		List<String> keys = new ArrayList<String>();
-		for (int c = 0x1F601; c <= 0x1F60F; c += 1) {
-			keys.add(new String(Character.toChars(c)));
-		}
-		return keys;
-	}
-
-	List<String> getAlphaKeys() {
-		List<String> keys = new ArrayList<String>();
-		for (char c = 'A'; c <= 'Z'; c++) {
-			keys.add(String.valueOf(c));
+	void setMode(Mode mode) {
+		if (PREDICTION_MODES.contains(mode) && mode.getKeys(buffer).isEmpty()) {
+			// force alpha mode if no prediction are available
+			mode = DEFAULT_MODE;
+			// or cycle back to previous prediction level that still had predictions available
+			for (Mode it : PREDICTION_MODES) {
+				if (it.getKeys(buffer).size() > 0) {
+					mode = it;
+					break;
+				}
+			}
 		}
 
-		keys.add(0, "⏎");
-		keys.add(1, "⌴");
-		keys.add("#");
-		keys.add("😀");
-		keys.add("⌫");
+		if (this.mode != mode) {
+			// update state
+			this.mode = mode;
+			this.index = 0;
 
-		return keys;
+			if (mode == Mode.Alpha) {
+				this.options = Mode.Prediction1.getKeys(buffer);
+			} else {
+				this.options = emptyList();
+			}
+
+			// update dial
+			if (dial != null) {
+				getChildren().remove(dial);
+			}
+			dial = createDial(mode);
+			dial.setLayoutX(140);
+			dial.setLayoutY(140);
+			getChildren().add(dial);
+
+			update();
+		}
 	}
 
 	void apply(String key) throws Exception {
 		switch (key) {
-		case "⏎":
+		case RETURN:
 			submit(buffer);
 			buffer = "";
-			predict();
 			break;
-		case "⌴":
+		case SPACE:
 			buffer += " ";
-			predict();
 			break;
-		case "⌫":
+		case BACKSPACE:
 			if (buffer.length() > 0) {
 				buffer = buffer.substring(0, buffer.length() - 1);
 			}
-			predict();
 			break;
-		case "#":
-			mode = 1;
-			index = 0;
-			keys = getNumberKeys();
+		case HASH:
+			setMode(Mode.Number);
 			break;
 		case "😀":
-			mode = 2;
-			index = 0;
-			keys = getEmojiKeys();
+			setMode(Mode.Emoji);
 			break;
 		default:
-			if (mode != 3) {
-				buffer = buffer + key.toLowerCase();
-			} else {
+			if (PREDICTION_MODES.contains(mode)) {
 				buffer = buffer.substring(0, buffer.lastIndexOf(" ") + 1) + key + " ";
+			} else {
+				buffer = buffer + key.toLowerCase();
 			}
-			predict();
-
-			if (mode != 0) {
-				mode = 0;
-				index = 0;
-				keys = getAlphaKeys();
-			}
+			setMode(DEFAULT_MODE);
 		}
 
+		if (mode == DEFAULT_MODE) {
+			options = Mode.Prediction1.getKeys(buffer);
+		}
 		update();
 	}
 
@@ -131,32 +212,21 @@ public class Watch extends Parent {
 		System.out.println("SUBMIT = " + value);
 	}
 
-	Prediction predictor = new Prediction();
-
-	void predict() {
-		predict(6);
-	}
-
-	void predict(int limit) {
-		if (buffer.matches("^.*[a-z]+$")) {
-			String[] input = buffer.split("\\s");
-			if (input.length > 0) {
-				String prefix = input[input.length - 1];
-				if (prefix.length() > 0) {
-					options = predictor.complete(prefix, limit);
-					return;
-				}
-			}
+	Dial createDial(Mode mode) {
+		switch (mode) {
+		case Alpha:
+			return new Dial(117, Color.RED, mode.getKeys(buffer), TEXT_FONT);
+		case Number:
+			return new Dial(114, Color.GREENYELLOW, mode.getKeys(buffer), TEXT_FONT);
+		case Emoji:
+			return new Dial(114, Color.GOLD, mode.getKeys(buffer), EMOJI_FONT);
+		default:
+			return new Dial(100, Color.ROYALBLUE, mode.getKeys(buffer), PREDICTION_FONT);
 		}
-		options = emptyList();
 	}
 
 	public Watch() {
-		alphaDial = new Dial(117, Color.RED, getAlphaKeys(), TEXT_FONT);
-		numberDial = new Dial(114, Color.GREENYELLOW, getNumberKeys(), TEXT_FONT);
-		emojiDial = new Dial(114, Color.GOLD, getEmojiKeys(), EMOJI_FONT);
-		predictionDial = new Dial(0, Color.BLACK, options, TEXT_FONT);
-
+		// text displays
 		inputDisplay.setBoundsType(TextBoundsType.VISUAL);
 		inputDisplay.setTextAlignment(TextAlignment.CENTER);
 		inputDisplay.setTextOrigin(VPos.BOTTOM);
@@ -171,129 +241,22 @@ public class Watch extends Parent {
 		predictionDisplay.setLayoutX(170);
 		predictionDisplay.setLayoutY(130);
 		predictionDisplay.setWrappingWidth(100);
-		predictionDisplay.setFont(new Font(12));
+		predictionDisplay.setFont(PREDICTION_FONT);
 
-		configureBackground();
-		myLayout();
-		getChildren().addAll(background, inputDisplay, predictionDisplay, alphaDial, numberDial, emojiDial, startButton, stopButton);
+		// buttons
+		startButton.setLayoutX(223);
+		startButton.setLayoutY(1);
+		Rotate rotateRight = new Rotate(360 / 12);
+		startButton.getTransforms().add(rotateRight);
 
-		update();
-	}
+		stopButton.setLayoutX(59.5);
+		stopButton.setLayoutY(0);
+		Rotate rotateLeft = new Rotate(-360 / 12);
+		stopButton.getTransforms().add(rotateLeft);
 
-	void update() {
-		inputDisplay.setText(buffer + "_");
-		predictionDisplay.setText(String.join("\n", options));
-
-		double angleStep = (Math.PI * 2) / keys.size();
-		double indexAngle = index * angleStep;
-		switch (mode) {
-		case 0:
-			alphaDial.setAngle(Math.toDegrees(indexAngle));
-			alphaDial.setVisible(true);
-			numberDial.setVisible(false);
-			emojiDial.setVisible(false);
-			predictionDial.setVisible(false);
-			break;
-		case 1:
-			numberDial.setAngle(Math.toDegrees(indexAngle));
-			alphaDial.setVisible(false);
-			numberDial.setVisible(true);
-			emojiDial.setVisible(false);
-			predictionDial.setVisible(false);
-			break;
-		case 2:
-			emojiDial.setAngle(Math.toDegrees(indexAngle));
-			alphaDial.setVisible(false);
-			numberDial.setVisible(false);
-			emojiDial.setVisible(true);
-			predictionDial.setVisible(false);
-			break;
-		case 3:
-			predictionDial.setAngle(Math.toDegrees(indexAngle));
-			alphaDial.setVisible(false);
-			numberDial.setVisible(false);
-			emojiDial.setVisible(false);
-			predictionDial.setVisible(true);
-			break;
-		}
-	}
-
-	void right() {
-		index = (index + 1) % keys.size();
-		update();
-
-		doPressButton(startButton);
-	}
-
-	void left() {
-		index = (index - 1) % keys.size();
-		if (index < 0) {
-			index += keys.size();
-		}
-		update();
-
-		doPressButton(stopButton);
-	}
-
-	void enter() {
-		String key = keys.get(index);
-		System.out.println("KEY = " + key);
-
-		try {
-			apply(key);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-
-		doPressButton(startButton, stopButton);
-	}
-
-	void select() {
-		if (mode == 3) {
-			predict(12);
-			sort(options, String.CASE_INSENSITIVE_ORDER);
-		}
-
-		if ((mode != 0 && mode != 3) || options.isEmpty()) {
-			return;
-		}
-
-		if (predictionDial != null) {
-			getChildren().remove(predictionDial);
-		}
-		predictionDial = new Dial(100, Color.ROYALBLUE, options, Font.font(12));
-		predictionDial.setLayoutX(140);
-		predictionDial.setLayoutY(140);
-		getChildren().add(predictionDial);
-
-		mode = 3;
-		index = 0;
-		keys = options;
-		options = emptyList();
-
-		update();
-		doPressButton(startButton, stopButton);
-	}
-
-	void doPressButton(StopWatchButton... button) {
-		for (StopWatchButton it : button) {
-			it.moveDown();
-		}
-		Timeline time = new Timeline();
-		time.setCycleCount(1);
-		KeyFrame keyFrame = new KeyFrame(Duration.millis(50), (event) -> {
-			for (StopWatchButton it : button) {
-				it.moveUp();
-			}
-		});
-		time.getKeyFrames().add(keyFrame);
-		time.play();
-	}
-
-	private void configureBackground() {
+		// background
 		ImageView imageView = new ImageView();
-		Image image = loadImage();
-		imageView.setImage(image);
+		imageView.setImage(new Image(Watch.class.getResourceAsStream("stopwatch.png")));
 
 		Circle circle1 = new Circle();
 		circle1.setCenterX(140);
@@ -329,30 +292,84 @@ public class Watch extends Parent {
 		ellipse.setOpacity(0.1);
 		ellipse.setClip(ellipseClip);
 		background.getChildren().addAll(imageView, circle1, circle2, circle3, ellipse);
+
+		// update stage
+		getChildren().addAll(background, inputDisplay, predictionDisplay, startButton, stopButton);
+
+		// init mode
+		setMode(DEFAULT_MODE);
 	}
 
-	private void myLayout() {
-		alphaDial.setLayoutX(140);
-		alphaDial.setLayoutY(140);
+	void update() {
+		inputDisplay.setText(buffer + "_");
+		predictionDisplay.setText(String.join("\n", options));
 
-		numberDial.setLayoutX(140);
-		numberDial.setLayoutY(140);
-
-		emojiDial.setLayoutX(140);
-		emojiDial.setLayoutY(140);
-
-		startButton.setLayoutX(223);
-		startButton.setLayoutY(1);
-		Rotate rotateRight = new Rotate(360 / 12);
-		startButton.getTransforms().add(rotateRight);
-
-		stopButton.setLayoutX(59.5);
-		stopButton.setLayoutY(0);
-		Rotate rotateLeft = new Rotate(-360 / 12);
-		stopButton.getTransforms().add(rotateLeft);
+		double angleStep = (Math.PI * 2) / mode.getKeys(buffer).size();
+		double indexAngle = index * angleStep;
+		dial.setAngle(Math.toDegrees(indexAngle));
 	}
 
-	public Image loadImage() {
-		return new Image(Watch.class.getResourceAsStream("stopwatch.png"));
+	void right() {
+		int total = mode.getKeys(buffer).size();
+		index = (index + 1) % total;
+
+		update();
+		doPressButton(startButton);
 	}
+
+	void left() {
+		int total = mode.getKeys(buffer).size();
+		index = (index - 1) % total;
+		if (index < 0) {
+			index += total;
+		}
+
+		update();
+		doPressButton(stopButton);
+	}
+
+	void enter() {
+		String key = mode.getKeys(buffer).get(index);
+		System.out.println("KEY = " + key);
+
+		try {
+			apply(key);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		doPressButton(startButton, stopButton);
+	}
+
+	void select() {
+		switch (this.mode) {
+		case Prediction1:
+			setMode(Mode.Prediction2);
+			break;
+		case Prediction2:
+			setMode(Mode.Prediction3);
+			break;
+		default:
+			setMode(Mode.Prediction1);
+			break;
+		}
+
+		doPressButton(startButton, stopButton);
+	}
+
+	void doPressButton(StopWatchButton... button) {
+		for (StopWatchButton it : button) {
+			it.moveDown();
+		}
+		Timeline time = new Timeline();
+		time.setCycleCount(1);
+		KeyFrame keyFrame = new KeyFrame(Duration.millis(50), (event) -> {
+			for (StopWatchButton it : button) {
+				it.moveUp();
+			}
+		});
+		time.getKeyFrames().add(keyFrame);
+		time.play();
+	}
+
 }

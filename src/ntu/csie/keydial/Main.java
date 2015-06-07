@@ -47,7 +47,7 @@ public class Main extends Application {
 			}
 		});
 
-		new Thread(() -> {
+		Thread eventReader = new Thread(() -> {
 			try (InputStream in = getSerialInputStream()) {
 				int b = 0;
 				while ((b = in.read()) > 0) {
@@ -59,7 +59,8 @@ public class Main extends Application {
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
-		}).start();
+		});
+		eventReader.start();
 	}
 
 	static InputStream getSerialInputStream() throws Exception {
