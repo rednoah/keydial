@@ -25,7 +25,7 @@ public class Stats {
 
 	public static final Stats stats = new Stats();
 
-	private int phrasesLimit = 10;
+	private int phrasesLimit = 25;
 	private String phrasesOutput = "study/phrases-%s.txt";
 
 	private Path phrases = Paths.get("study/phrases.txt");
@@ -99,8 +99,11 @@ public class Stats {
 				try {
 					Path newFile = Paths.get(String.format(phrasesOutput, user));
 
-					List<String> lines = Files.lines(phrases, StandardCharsets.UTF_8).limit(phrasesLimit).collect(Collectors.toList());
+					List<String> lines = Files.lines(phrases, StandardCharsets.UTF_8).collect(Collectors.toList());
+
 					shuffle(lines, new SecureRandom());
+					lines = lines.subList(0, phrasesLimit);
+
 					Files.write(newFile, lines, StandardCharsets.UTF_8, StandardOpenOption.CREATE_NEW);
 
 					Desktop.getDesktop().browse(newFile.toUri());
