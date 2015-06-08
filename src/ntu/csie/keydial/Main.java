@@ -32,6 +32,7 @@ public class Main extends Application {
 
 		stage.setScene(new Scene(watch, Color.TRANSPARENT));
 		stage.initStyle(StageStyle.TRANSPARENT);
+		stage.setAlwaysOnTop(true);
 		stage.show();
 
 		// touch input

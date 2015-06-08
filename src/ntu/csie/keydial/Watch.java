@@ -217,11 +217,11 @@ public class Watch extends Parent {
 	}
 
 	void submit(String value) {
-		if (value.isEmpty())
-			return;
-
-		System.out.println("SUBMIT = " + value);
-		stats.endRecord(value);
+		if (value.length() > 0) {
+			System.out.println("SUBMIT = " + value);
+			stats.endRecord(value);
+		}
+		stats.startRecord(); // restart record
 	}
 
 	Dial createDial(Mode mode) {
@@ -360,6 +360,9 @@ public class Watch extends Parent {
 			break;
 		case Prediction2:
 			setMode(Mode.Prediction3);
+			break;
+		case Prediction3:
+			setMode(DEFAULT_MODE);
 			break;
 		default:
 			setMode(Mode.Prediction1);

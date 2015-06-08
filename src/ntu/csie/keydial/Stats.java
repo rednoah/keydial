@@ -39,12 +39,13 @@ public class Stats {
 		user = s;
 		System.out.println("USER = " + user);
 
-		reset();
 		startRecord();
 	}
 
 	public void startRecord() {
+		reset();
 		start = Instant.now();
+		System.out.println("START_RECORD: " + start);
 	}
 
 	public void record(String s) {
@@ -58,6 +59,7 @@ public class Stats {
 		// record
 		Map<String, Object> stats = new LinkedHashMap<String, Object>();
 		stats.put("user", user);
+		stats.put("date", start);
 		stats.put("output", output);
 		stats.put("entered", record.stream().filter((it) -> !Watch.CONTROL_KEYS.contains(it)).count());
 		stats.put("deleted", record.stream().filter((it) -> it.equals(Watch.BACKSPACE)).count());
@@ -72,9 +74,6 @@ public class Stats {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-
-		reset();
-		startRecord();
 	}
 
 }
