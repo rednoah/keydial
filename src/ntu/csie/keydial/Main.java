@@ -32,7 +32,6 @@ public class Main extends Application {
 
 		stage.setScene(new Scene(watch, Color.TRANSPARENT));
 		stage.initStyle(StageStyle.TRANSPARENT);
-		stage.setAlwaysOnTop(true);
 		stage.show();
 
 		// touch input
@@ -84,9 +83,7 @@ public class Main extends Application {
 				watch.select();
 				break;
 			case TAB:
-				TextInputDialog dialog = new TextInputDialog("USER");
-				dialog.setHeaderText("Start Test");
-				dialog.showAndWait().ifPresent(name -> stats.setUser(name));
+				stats.enterUser();
 				break;
 			}
 		});

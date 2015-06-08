@@ -180,7 +180,9 @@ public class Watch extends Parent {
 	}
 
 	void apply(String key) throws Exception {
-		stats.record(key);
+		if (stats.started()) {
+			stats.record(key);
+		}
 
 		switch (key) {
 		case RETURN:
@@ -221,7 +223,7 @@ public class Watch extends Parent {
 			System.out.println("SUBMIT = " + value);
 			stats.endRecord(value);
 		}
-		stats.startRecord(); // restart record
+		stats.reset();
 	}
 
 	Dial createDial(Mode mode) {
@@ -322,6 +324,10 @@ public class Watch extends Parent {
 	}
 
 	void right() {
+		if (!stats.started()) {
+			stats.startRecord();
+		}
+
 		int total = mode.getKeys(buffer).size();
 		index = (index + 1) % total;
 
@@ -330,6 +336,10 @@ public class Watch extends Parent {
 	}
 
 	void left() {
+		if (!stats.started()) {
+			stats.startRecord();
+		}
+
 		int total = mode.getKeys(buffer).size();
 		index = (index - 1) % total;
 		if (index < 0) {
