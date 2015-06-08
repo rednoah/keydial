@@ -34,7 +34,12 @@ public class Prediction {
 			if (input.length > 0) {
 				String prefix = input[input.length - 1];
 				if (prefix.length() > 0) {
-					return completeWord(prefix, limit);
+					List<String> options = completeWord(prefix, limit);
+					if (options.size() > 0) {
+						return options;
+					} else {
+						return singletonList(prefix);
+					}
 				}
 			}
 		}
