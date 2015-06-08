@@ -105,6 +105,8 @@ public class Main extends Application {
 			}
 		});
 		// eventReader.start();
+
+		stats.setUser("USER1");
 	}
 
 	static InputStream getSerialInputStream() throws Exception {
