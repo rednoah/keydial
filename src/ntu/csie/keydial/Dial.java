@@ -1,6 +1,7 @@
 package ntu.csie.keydial;
 
 import java.util.List;
+import java.util.Set;
 
 import javafx.geometry.VPos;
 import javafx.scene.Group;
@@ -12,6 +13,7 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextAlignment;
 import javafx.scene.transform.Rotate;
@@ -23,25 +25,31 @@ public class Dial extends Parent {
 	private final Color fill;
 	private final Font font;
 
+	private final Color highlightFill;
+	private final Font highlightFont;
+
 	private final Group hand = new Group();
 	private final Group handEffectGroup = new Group(hand);
 	private final DropShadow handEffect = new DropShadow();
 
-	public Dial(double radius, Color color, List<String> keys, Font font) {
+	public Dial(double radius, Color color, List<String> keys, Set<String> highlightKeys, Font font) {
 		this.color = color;
 		this.radius = radius;
 
 		this.fill = Color.web("#0A0A0A");
 		this.font = font;
 
-		getChildren().add(createNumbers(keys));
+		this.highlightFill = Color.BLUE;
+		this.highlightFont = Font.font(font.getName(), FontWeight.BOLD, font.getSize());
+
+		getChildren().add(createNumbers(keys, highlightKeys));
 
 		configureHand();
 		configureEffect();
 		getChildren().addAll(handEffectGroup);
 	}
 
-	private Group createNumbers(List<String> keys) {
+	private Group createNumbers(List<String> keys, Set<String> highlightKeys) {
 		Group group = new Group();
 
 		double angle = -Math.PI / 2;
@@ -49,24 +57,24 @@ public class Dial extends Parent {
 		for (String a : keys) {
 			double x = (radius * 0.9) * Math.cos(angle);
 			double y = (radius * 0.9) * Math.sin(angle);
-			group.getChildren().add(createNumber(a, x, y + 7));
+			group.getChildren().add(createNumber(a, x, y + 7, highlightKeys.contains(a)));
 			angle += angleStep;
 		}
 
 		return group;
 	}
 
-	private Text createNumber(String number, double layoutX, double layoutY) {
+	private Text createNumber(String number, double layoutX, double layoutY, boolean highlight) {
 		Text text = new Text(number);
 		text.setTextAlignment(TextAlignment.CENTER);
 		text.setWrappingWidth(100);
 		text.setTextOrigin(VPos.CENTER);
-		text.setFill(fill);
+		text.setFill(highlight ? highlightFill : fill);
 
 		if (Watch.SMILEY.equals(number)) {
 			text.setFont(Watch.TEXT_EMOJI_FONT);
 		} else {
-			text.setFont(font);
+			text.setFont(highlight ? highlightFont : font);
 		}
 
 		text.setLayoutX(layoutX - text.getBoundsInLocal().getWidth() / 2);

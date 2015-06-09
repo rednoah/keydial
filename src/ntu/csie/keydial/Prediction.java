@@ -6,8 +6,10 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -28,19 +30,24 @@ public class Prediction {
 	Pattern SENTENCE = Pattern.compile("^.*\\w+$", Pattern.CASE_INSENSITIVE);
 	Pattern SPACE = Pattern.compile("\\s+");
 
-	public List<String> completeSentence(String s, int limit) {
+	public String getLastWord(String s) {
 		if (SENTENCE.matcher(s).matches()) {
 			String[] input = SPACE.split(s);
 			if (input.length > 0) {
-				String prefix = input[input.length - 1];
-				if (prefix.length() > 0) {
-					List<String> options = completeWord(prefix, limit);
-					if (options.size() > 0) {
-						return options;
-					} else {
-						return singletonList(prefix);
-					}
-				}
+				return input[input.length - 1];
+			}
+		}
+		return "";
+	}
+
+	public List<String> completeSentence(String s, int limit) {
+		String prefix = getLastWord(s);
+		if (prefix.length() > 0) {
+			List<String> options = completeWord(prefix, limit);
+			if (options.size() > 0) {
+				return options;
+			} else {
+				return singletonList(prefix);
 			}
 		}
 		return emptyList();
@@ -52,6 +59,26 @@ public class Prediction {
 		Stream<String> stream = subMap.entrySet().stream().sorted((o2, o1) -> o1.getValue().compareTo(o2.getValue())).limit(limit).map((m) -> m.getKey());
 
 		return stream.collect(Collectors.toList());
+	}
+
+	public Set<String> guessNextCharacter(String s, int limit) {
+		String prefix = getLastWord(s);
+		if (prefix.length() > 0) {
+			List<String> options = completeWord(prefix, limit);
+			if (options.size() > 0) {
+				Set<String> letters = new HashSet<String>();
+				for (String it : options) {
+					if (it.length() > prefix.length()) {
+						String letter = it.substring(prefix.length(), prefix.length() + 1).toUpperCase();
+						if (letter.matches("[A-Z]")) {
+							letters.add(letter);
+						}
+					}
+				}
+				return letters;
+			}
+		}
+		return emptySet();
 	}
 
 	public Prediction() {

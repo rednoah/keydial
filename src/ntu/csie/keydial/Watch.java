@@ -63,6 +63,11 @@ public class Watch extends Parent {
 				keys.add(BACKSPACE);
 				return keys;
 			}
+
+			@Override
+			Set<String> getHighlightKeys(String buffer) {
+				return Prediction.getInstance().guessNextCharacter(buffer, 6 + 12 + 12);
+			}
 		},
 
 		Number {
@@ -119,7 +124,13 @@ public class Watch extends Parent {
 			}
 		};
 
-		abstract List<String> getKeys(String input);
+		List<String> getKeys(String input) {
+			return emptyList();
+		}
+
+		Set<String> getHighlightKeys(String buffer) {
+			return emptySet();
+		}
 
 	}
 
@@ -152,33 +163,31 @@ public class Watch extends Parent {
 			}
 		}
 
-		if (this.mode != mode) {
-			// update state
-			this.mode = mode;
-			this.index = 0;
+		// update state
+		this.mode = mode;
+		this.index = 0;
 
-			if (mode == Mode.Alpha) {
-				this.options = Mode.Prediction1.getKeys(buffer);
-			} else {
-				this.options = emptyList();
-			}
-
-			// update dial
-			if (dial != null) {
-				getChildren().remove(dial);
-			}
-			dial = createDial(mode);
-			if (mode == Mode.Emoji) {
-				dial.setLayoutX(140);
-				dial.setLayoutY(145);
-			} else {
-				dial.setLayoutX(140);
-				dial.setLayoutY(140);
-			}
-			getChildren().add(dial);
-
-			update();
+		if (mode == Mode.Alpha) {
+			this.options = Mode.Prediction1.getKeys(buffer);
+		} else {
+			this.options = emptyList();
 		}
+
+		// update dial
+		if (dial != null) {
+			getChildren().remove(dial);
+		}
+		dial = createDial(mode);
+		if (mode == Mode.Emoji) {
+			dial.setLayoutX(140);
+			dial.setLayoutY(145);
+		} else {
+			dial.setLayoutX(140);
+			dial.setLayoutY(140);
+		}
+		getChildren().add(dial);
+
+		update();
 	}
 
 	void apply(String key) throws Exception {
@@ -231,13 +240,13 @@ public class Watch extends Parent {
 	Dial createDial(Mode mode) {
 		switch (mode) {
 		case Alpha:
-			return new Dial(117, Color.RED, mode.getKeys(buffer), TEXT_FONT);
+			return new Dial(117, Color.RED, mode.getKeys(buffer), mode.getHighlightKeys(buffer), TEXT_FONT);
 		case Number:
-			return new Dial(114, Color.GREENYELLOW, mode.getKeys(buffer), TEXT_FONT);
+			return new Dial(114, Color.GREENYELLOW, mode.getKeys(buffer), mode.getHighlightKeys(buffer), TEXT_FONT);
 		case Emoji:
-			return new Dial(110, Color.GOLD, mode.getKeys(buffer), EMOJI_FONT);
+			return new Dial(110, Color.GOLD, mode.getKeys(buffer), mode.getHighlightKeys(buffer), EMOJI_FONT);
 		default:
-			return new Dial(100, Color.ROYALBLUE, mode.getKeys(buffer), PREDICTION_FONT);
+			return new Dial(100, Color.ROYALBLUE, mode.getKeys(buffer), mode.getHighlightKeys(buffer), PREDICTION_FONT);
 		}
 	}
 
