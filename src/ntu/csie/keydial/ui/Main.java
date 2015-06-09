@@ -117,7 +117,10 @@ public class Main extends Application {
 
 		// serial input (on Mac you may need to run the following commands to make RxTx work: sudo mkdir /var/lock && sudo chmod 777 /var/lock)
 		Runnable serialPortReader = () -> {
-			try (InputStream in = Serial.open(Serial.getDefaultPort())) {
+			String port = Serial.getDefaultPort();
+			System.out.println("SERIAL_PORT: " + port);
+
+			try (InputStream in = Serial.open(port)) {
 				int b = 0;
 				while ((b = in.read()) > 0) {
 					final char code = (char) b;
@@ -143,7 +146,7 @@ public class Main extends Application {
 					});
 				}
 			} catch (Exception e) {
-				e.printStackTrace();
+				System.err.println(e);
 			}
 		};
 
