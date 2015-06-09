@@ -2,14 +2,12 @@ package ntu.csie.keydial;
 
 import static ntu.csie.keydial.Stats.*;
 
-import java.io.FileInputStream;
 import java.io.InputStream;
 
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.event.EventHandler;
 import javafx.scene.Scene;
-import javafx.scene.control.TextInputDialog;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseButton;
@@ -93,6 +91,7 @@ public class Main extends Application {
 			try (InputStream in = getSerialInputStream()) {
 				int b = 0;
 				while ((b = in.read()) > 0) {
+					System.out.println("READ:" + b);
 					final KeyCode code = b == 'L' ? KeyCode.LEFT : b == 'R' ? KeyCode.RIGHT : b == '*' ? KeyCode.SHIFT : KeyCode.SPACE;
 					Platform.runLater(() -> {
 						stage.getScene().getOnKeyPressed().handle(new KeyEvent(KeyEvent.KEY_PRESSED, "", "", code, false, false, false, false));
@@ -102,13 +101,18 @@ public class Main extends Application {
 				e.printStackTrace();
 			}
 		});
-		// eventReader.start();
+		eventReader.start();
 
 		stats.setUser("USER1");
 	}
 
 	static InputStream getSerialInputStream() throws Exception {
-		return new FileInputStream("serial.txt");
+		// return new FileInputStream("serial.txt");
+
+		// on Mac you may need to run the following commands to make RxTx work
+		// $ sudo mkdir /var/lock
+		// $ sudo chmod 777 /var/lock
+		return Serial.connect("/dev/cu.usbmodem1421");
 	}
 
 }
