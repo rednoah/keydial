@@ -109,12 +109,12 @@ public class Stats {
 		// record
 		Map<String, Object> stats = new LinkedHashMap<String, Object>();
 		stats.put("user", user);
-		stats.put("cps", output.length() / ((double) Duration.between(start, end).toMillis() / 1000));
 		stats.put("wpm", ((double) output.length() / 5) / ((double) Duration.between(start, end).toMillis() / 60000));
+		stats.put("cps", output.length() / ((double) Duration.between(start, end).toMillis() / 1000));
+		stats.put("duration", Duration.between(start, end).toMillis());
 		stats.put("entered", record.stream().filter((it) -> !Watch.CONTROL_KEYS.contains(it)).count());
 		stats.put("deleted", record.stream().filter((it) -> it.equals(Watch.BACKSPACE)).count());
 		stats.put("distance", new Levenshtein().getSimilarity(normalize(input), normalize(output)));
-		stats.put("duration", Duration.between(start, end).toMillis());
 		stats.put("date", start);
 		stats.put("input", input);
 		stats.put("output", output);
