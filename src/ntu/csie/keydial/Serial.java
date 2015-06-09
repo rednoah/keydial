@@ -18,6 +18,8 @@ public class Serial {
 			if (commPort instanceof SerialPort) {
 				final SerialPort serialPort = (SerialPort) commPort;
 				serialPort.setSerialPortParams(9600, SerialPort.DATABITS_8, SerialPort.STOPBITS_1, SerialPort.PARITY_NONE);
+				serialPort.disableReceiveTimeout();
+				serialPort.enableReceiveThreshold(1);
 
 				return serialPort.getInputStream();
 			} else {

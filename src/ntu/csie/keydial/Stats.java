@@ -117,19 +117,19 @@ public class Stats {
 
 	public static void main(String[] args) throws Exception {
 		Files.lines(phrases, StandardCharsets.UTF_8).flatMap(it -> Stream.of(it.trim().split("\\s+"))).map(String::toLowerCase).sorted().distinct().map(s -> {
-			List<Object> line = new ArrayList<Object>();
+			List<String> line = new ArrayList<String>();
 			line.add(s);
 
 			int[] level = new int[] { 6, 18, 30 };
 			for (int i = 0; i < level.length; i++) {
-				for (int c = 0; c <= s.length(); c++) {
-					if (c == s.length()) {
-						line.add(-1);
+				for (int c = 1; c <= s.length() + 1; c++) {
+					if (c >= s.length() + 1) {
+						line.add(String.valueOf(Float.NaN));
 						break;
 					} else {
-						List<String> options = Prediction.getInstance().completeWord(s, level[i]);
+						List<String> options = Prediction.getInstance().completeWord(s.substring(0, c), level[i]);
 						if (options.stream().filter(w -> w.equalsIgnoreCase(s)).findFirst().isPresent()) {
-							line.add(i);
+							line.add(String.valueOf(c));
 							break;
 						}
 					}
@@ -137,6 +137,6 @@ public class Stats {
 			}
 
 			return line;
-		}).forEach(System.out::println);
+		}).forEach(l -> System.out.println(String.join("\t", l)));
 	}
 }
