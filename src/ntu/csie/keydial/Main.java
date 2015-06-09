@@ -86,9 +86,9 @@ public class Main extends Application {
 			}
 		});
 
-		// read input events via serial port
+		// serial input (on Mac you may need to run the following commands to make RxTx work: sudo mkdir /var/lock && sudo chmod 777 /var/lock)
 		Thread eventReader = new Thread(() -> {
-			try (InputStream in = getSerialInputStream()) {
+			try (InputStream in = Serial.connect()) {
 				int b = 0;
 				while ((b = in.read()) > 0) {
 					System.out.println("SERIAL_READ: " + (char) b);
@@ -101,16 +101,9 @@ public class Main extends Application {
 				e.printStackTrace();
 			}
 		});
-		eventReader.start();
+		// eventReader.start();
 
 		stats.setUser("USER1");
-	}
-
-	static InputStream getSerialInputStream() throws Exception {
-		// on Mac you may need to run the following commands to make RxTx work
-		// $ sudo mkdir /var/lock
-		// $ sudo chmod 777 /var/lock
-		return Serial.connect("/dev/cu.usbmodem1421");
 	}
 
 }
