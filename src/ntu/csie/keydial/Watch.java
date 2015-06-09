@@ -1,13 +1,16 @@
 package ntu.csie.keydial;
 
+import static java.lang.Math.*;
 import static java.util.Arrays.*;
 import static java.util.Collections.*;
+import static java.util.regex.Pattern.*;
 import static ntu.csie.keydial.Stats.*;
 
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
+import java.util.regex.Matcher;
 import java.util.stream.Collectors;
 
 import javafx.animation.KeyFrame;
@@ -254,7 +257,7 @@ public class Watch extends Parent {
 		predictionDisplay.setTextOrigin(VPos.CENTER);
 		predictionDisplay.setLayoutX(170);
 		predictionDisplay.setLayoutY(130);
-		predictionDisplay.setWrappingWidth(100);
+		predictionDisplay.setWrappingWidth(70);
 		predictionDisplay.setFont(PREDICTION_FONT);
 
 		// buttons
@@ -315,7 +318,7 @@ public class Watch extends Parent {
 	}
 
 	void update() {
-		inputDisplay.setText(buffer + CARET);
+		inputDisplay.setText(truncateLeft(buffer, 20, "\\s+") + CARET);
 		predictionDisplay.setText(String.join("\n", options));
 
 		double angleStep = (Math.PI * 2) / mode.getKeys(buffer).size();
@@ -395,6 +398,20 @@ public class Watch extends Parent {
 		});
 		time.getKeyFrames().add(keyFrame);
 		time.play();
+	}
+
+	public static String truncateLeft(String self, int hardLimit, String nonWordPattern) {
+		if (hardLimit >= self.length()) {
+			return self;
+		}
+
+		int minStartIndex = self.length() - hardLimit;
+		Matcher matcher = compile(nonWordPattern, CASE_INSENSITIVE | UNICODE_CHARACTER_CLASS).matcher(self).region(minStartIndex, self.length());
+		if (matcher.find()) {
+			return self.substring(matcher.start(), self.length());
+		} else {
+			return self.substring(minStartIndex, self.length());
+		}
 	}
 
 }
