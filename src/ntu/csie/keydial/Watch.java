@@ -151,6 +151,10 @@ public class Watch extends Parent {
 	List<String> options = emptyList();
 
 	void setMode(Mode mode) {
+		setMode(mode, 0);
+	}
+
+	void setMode(Mode mode, int index) {
 		if (PREDICTION_MODES.contains(mode) && mode.getKeys(buffer).isEmpty()) {
 			// force alpha mode if no prediction are available
 			mode = DEFAULT_MODE;
@@ -165,7 +169,7 @@ public class Watch extends Parent {
 
 		// update state
 		this.mode = mode;
-		this.index = 0;
+		this.index = index;
 
 		if (mode == Mode.Alpha) {
 			this.options = Mode.Prediction1.getKeys(buffer);
@@ -199,14 +203,17 @@ public class Watch extends Parent {
 		case RETURN:
 			submit(buffer.trim());
 			buffer = "";
+			setMode(DEFAULT_MODE);
 			break;
 		case SPACE:
 			buffer += " ";
+			setMode(DEFAULT_MODE, index);
 			break;
 		case BACKSPACE:
 			if (buffer.length() > 0) {
 				buffer = buffer.substring(0, buffer.length() - 1);
 			}
+			setMode(DEFAULT_MODE, index);
 			break;
 		case HASH:
 			setMode(Mode.Number);
@@ -217,10 +224,11 @@ public class Watch extends Parent {
 		default:
 			if (PREDICTION_MODES.contains(mode)) {
 				buffer = buffer.substring(0, buffer.lastIndexOf(" ") + 1) + key + " ";
+				setMode(DEFAULT_MODE, 0);
 			} else {
 				buffer = buffer + key.toLowerCase();
+				setMode(DEFAULT_MODE, index);
 			}
-			setMode(DEFAULT_MODE);
 		}
 
 		if (mode == DEFAULT_MODE) {
@@ -322,7 +330,7 @@ public class Watch extends Parent {
 		getChildren().addAll(background, inputDisplay, predictionDisplay, startButton, stopButton);
 
 		// init mode
-		setMode(DEFAULT_MODE);
+		setMode(DEFAULT_MODE, 0);
 	}
 
 	void update() {
