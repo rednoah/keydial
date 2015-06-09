@@ -416,7 +416,18 @@ public class Watch extends Parent {
 		time.play();
 	}
 
-	public static String truncateLeft(String self, int hardLimit, String nonWordPattern) {
+	Timeline repeater(Runnable r) {
+		Timeline time = new Timeline();
+		time.setCycleCount(Timeline.INDEFINITE);
+		time.setDelay(Duration.millis(100));
+		KeyFrame f = new KeyFrame(Duration.millis(20), evt -> {
+			r.run();
+		});
+		time.getKeyFrames().add(f);
+		return time;
+	}
+
+	String truncateLeft(String self, int hardLimit, String nonWordPattern) {
 		if (hardLimit >= self.length()) {
 			return self;
 		}

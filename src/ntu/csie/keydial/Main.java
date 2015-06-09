@@ -4,6 +4,8 @@ import static ntu.csie.keydial.Stats.*;
 
 import java.io.InputStream;
 
+import javafx.animation.Animation.Status;
+import javafx.animation.Timeline;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.event.EventHandler;
@@ -74,19 +76,40 @@ public class Main extends Application {
 		});
 
 		// keyboard input
+		Timeline moveLeft = watch.repeater(watch::left);
+		Timeline moveRight = watch.repeater(watch::right);
+
 		stage.getScene().setOnKeyPressed((evt) -> {
 			switch (evt.getCode()) {
 			case SPACE:
 				watch.enter();
 				break;
 			case RIGHT:
-				watch.right();
+				if (moveRight.getStatus() != Status.RUNNING) {
+					watch.right();
+					moveRight.play();
+				}
 				break;
 			case LEFT:
-				watch.left();
+				if (moveLeft.getStatus() != Status.RUNNING) {
+					watch.left();
+					moveLeft.play();
+				}
 				break;
 			case SHIFT:
 				watch.select();
+				break;
+			default:
+				break;
+			}
+		});
+		stage.getScene().setOnKeyReleased((evt) -> {
+			switch (evt.getCode()) {
+			case RIGHT:
+				moveRight.stop();
+				break;
+			case LEFT:
+				moveLeft.stop();
 				break;
 			default:
 				break;
@@ -98,16 +121,34 @@ public class Main extends Application {
 			try (InputStream in = Serial.connect()) {
 				int b = 0;
 				while ((b = in.read()) > 0) {
-					System.out.println("SERIAL_READ: " + (char) b);
-					final KeyCode code = b == 'L' ? KeyCode.LEFT : b == 'R' ? KeyCode.RIGHT : b == '*' ? KeyCode.SHIFT : KeyCode.SPACE;
+					final char code = (char) b;
+					System.out.println("SERIAL_READ: " + code);
+
 					Platform.runLater(() -> {
-						stage.getScene().getOnKeyPressed().handle(new KeyEvent(KeyEvent.KEY_PRESSED, "", "", code, false, false, false, false));
+						switch (code) {
+						case '.':
+							watch.enter();
+							break;
+						case 'R':
+							watch.right();
+							break;
+						case 'L':
+							watch.left();
+							break;
+						case '*':
+							watch.select();
+							break;
+						default:
+							break;
+						}
 					});
 				}
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
 		});
+
 		// eventReader.start();
 	}
+
 }
