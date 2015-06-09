@@ -88,6 +88,8 @@ public class Main extends Application {
 			case SHIFT:
 				watch.select();
 				break;
+			default:
+				break;
 			}
 		});
 
