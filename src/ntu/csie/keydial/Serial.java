@@ -19,10 +19,6 @@ public class Serial {
 				final SerialPort serialPort = (SerialPort) commPort;
 				serialPort.setSerialPortParams(9600, SerialPort.DATABITS_8, SerialPort.STOPBITS_1, SerialPort.PARITY_NONE);
 
-				Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-					serialPort.close();
-				}));
-
 				return serialPort.getInputStream();
 			} else {
 				throw new Exception("Only serial ports are handled");

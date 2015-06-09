@@ -91,7 +91,7 @@ public class Main extends Application {
 			try (InputStream in = getSerialInputStream()) {
 				int b = 0;
 				while ((b = in.read()) > 0) {
-					System.out.println("READ:" + b);
+					System.out.println("SERIAL_READ: " + (char) b);
 					final KeyCode code = b == 'L' ? KeyCode.LEFT : b == 'R' ? KeyCode.RIGHT : b == '*' ? KeyCode.SHIFT : KeyCode.SPACE;
 					Platform.runLater(() -> {
 						stage.getScene().getOnKeyPressed().handle(new KeyEvent(KeyEvent.KEY_PRESSED, "", "", code, false, false, false, false));

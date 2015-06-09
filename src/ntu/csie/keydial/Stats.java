@@ -1,5 +1,6 @@
 package ntu.csie.keydial;
 
+import static java.util.Arrays.*;
 import static java.util.Collections.*;
 
 import java.awt.Desktop;
@@ -18,6 +19,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javafx.scene.control.TextInputDialog;
 
@@ -25,11 +27,11 @@ public class Stats {
 
 	public static final Stats stats = new Stats();
 
-	private int phrasesLimit = 25;
-	private String phrasesOutput = "study/phrases-%s.txt";
+	private static final int phrasesLimit = 25;
+	private static final String phrasesOutput = "study/phrases-%s.txt";
 
-	private Path phrases = Paths.get("study/phrases.txt");
-	private Path records = Paths.get("study/stats.tsv");
+	private static final Path phrases = Paths.get("study/phrases.txt");
+	private static final Path records = Paths.get("study/stats.tsv");
 
 	private String user;
 
@@ -111,5 +113,30 @@ public class Stats {
 					e.printStackTrace();
 				}
 			});
+	}
+
+	public static void main(String[] args) throws Exception {
+		Files.lines(phrases, StandardCharsets.UTF_8).flatMap(it -> Stream.of(it.trim().split("\\s+"))).map(String::toLowerCase).sorted().distinct().map(s -> {
+			List<Object> line = new ArrayList<Object>();
+			line.add(s);
+
+			int[] level = new int[] { 6, 18, 30 };
+			for (int i = 0; i < level.length; i++) {
+				for (int c = 0; c <= s.length(); c++) {
+					if (c == s.length()) {
+						line.add(-1);
+						break;
+					} else {
+						List<String> options = Prediction.getInstance().completeWord(s, level[i]);
+						if (options.stream().filter(w -> w.equalsIgnoreCase(s)).findFirst().isPresent()) {
+							line.add(i);
+							break;
+						}
+					}
+				}
+			}
+
+			return line;
+		}).forEach(System.out::println);
 	}
 }
