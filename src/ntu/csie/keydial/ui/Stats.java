@@ -160,6 +160,7 @@ public class Stats {
 			prompterNode.setBorder(new Border(new BorderStroke(Color.BLACK, BorderStrokeStyle.SOLID, new CornerRadii(5), new BorderWidths(1), new Insets(0))));
 			prompterNode.getChildren().addAll(prompter);
 			prompterNode.setAlignment(Pos.CENTER);
+			prompterNode.setMaxWidth(700);
 			HBox.setMargin(prompter, new Insets(20));
 		}
 		return prompterNode;
