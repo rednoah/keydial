@@ -2,7 +2,6 @@ package ntu.csie.keydial;
 
 import static java.util.Collections.*;
 
-import java.awt.Desktop;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -14,13 +13,35 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Queue;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
+import javafx.geometry.VPos;
+import javafx.scene.Cursor;
+import javafx.scene.Node;
 import javafx.scene.control.TextInputDialog;
+import javafx.scene.layout.Background;
+import javafx.scene.layout.BackgroundFill;
+import javafx.scene.layout.Border;
+import javafx.scene.layout.BorderStroke;
+import javafx.scene.layout.BorderStrokeStyle;
+import javafx.scene.layout.BorderWidths;
+import javafx.scene.layout.CornerRadii;
+import javafx.scene.layout.HBox;
+import javafx.scene.paint.Color;
+import javafx.scene.text.Font;
+import javafx.scene.text.Text;
+import javafx.scene.text.TextAlignment;
+import javafx.scene.text.TextBoundsType;
+import javafx.stage.Modality;
+import uk.ac.shef.wit.simmetrics.similaritymetrics.Levenshtein;
 
 public class Stats {
 
@@ -33,11 +54,17 @@ public class Stats {
 	private static final Path records = Paths.get("study/stats.tsv");
 
 	private String user;
+	private Queue<String> lines;
 
+	private String input;
 	private String output;
 	private List<String> record;
 	private Instant start;
 	private Instant end;
+
+	public String normalize(String s) {
+		return s.trim().toLowerCase();
+	}
 
 	public void reset() {
 		output = null;
@@ -46,9 +73,16 @@ public class Stats {
 		end = null;
 	}
 
-	public void setUser(String s) {
-		user = s;
-		System.out.println("USER = " + user);
+	public void setUser(String user, Queue<String> lines) {
+		reset();
+
+		this.user = user;
+		this.lines = lines;
+		this.input = lines.poll();
+
+		if (prompter != null) {
+			prompter.setText(input);
+		}
 	}
 
 	public boolean started() {
@@ -73,7 +107,9 @@ public class Stats {
 		Map<String, Object> stats = new LinkedHashMap<String, Object>();
 		stats.put("user", user);
 		stats.put("date", start);
+		stats.put("input", input);
 		stats.put("output", output);
+		stats.put("distance", new Levenshtein().getSimilarity(normalize(input), normalize(output)));
 		stats.put("entered", record.stream().filter((it) -> !Watch.CONTROL_KEYS.contains(it)).count());
 		stats.put("deleted", record.stream().filter((it) -> it.equals(Watch.BACKSPACE)).count());
 		stats.put("duration", Duration.between(start, end).toMillis());
@@ -87,31 +123,60 @@ public class Stats {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+
+		// reset and poll next line
+		setUser(user, lines);
 	}
 
-	public void enterUser() {
+	private HBox prompterNode;
+	private Text prompter;
+
+	public Node getPrompter() {
+		if (prompterNode == null) {
+			prompter = new Text();
+			prompter.setFont(Font.font(Font.getDefault().getName(), 24));
+			prompter.setText("Click to start ...");
+
+			prompter.setBoundsType(TextBoundsType.VISUAL);
+			prompter.setTextAlignment(TextAlignment.CENTER);
+			prompter.setTextOrigin(VPos.TOP);
+			prompter.setWrappingWidth(700);
+			prompter.setCursor(Cursor.HAND);
+			prompter.setOnMouseClicked(evt -> stats.enterUser((Node) evt.getSource()));
+
+			prompterNode = new HBox();
+			prompterNode.setBackground(new Background(new BackgroundFill(Color.WHITE, new CornerRadii(5), new Insets(0))));
+			prompterNode.setBorder(new Border(new BorderStroke(Color.BLACK, BorderStrokeStyle.SOLID, new CornerRadii(5), new BorderWidths(1), new Insets(0))));
+			prompterNode.getChildren().addAll(prompter);
+			prompterNode.setAlignment(Pos.CENTER);
+			HBox.setMargin(prompter, new Insets(20));
+		}
+		return prompterNode;
+	}
+
+	public void enterUser(Node owner) {
 		TextInputDialog dialog = new TextInputDialog("USER");
+		dialog.initOwner(owner.getScene().getWindow());
+		dialog.initModality(Modality.APPLICATION_MODAL);
 		dialog.setHeaderText("Start Test");
 		dialog.showAndWait().ifPresent(name -> {
-			// set user
-				stats.setUser(name);
-
+			try {
 				// create user-specific test set
-				try {
-					Path newFile = Paths.get(String.format(phrasesOutput, user));
+				Path newFile = Paths.get(String.format(phrasesOutput, name));
 
-					List<String> lines = Files.lines(phrases, StandardCharsets.UTF_8).collect(Collectors.toList());
+				List<String> lines = Files.lines(phrases, StandardCharsets.UTF_8).collect(Collectors.toList());
 
-					shuffle(lines, new SecureRandom());
-					lines = lines.subList(0, phrasesLimit);
+				shuffle(lines, new SecureRandom());
+				lines = lines.subList(0, phrasesLimit);
 
-					Files.write(newFile, lines, StandardCharsets.UTF_8, StandardOpenOption.CREATE_NEW);
+				Files.write(newFile, lines, StandardCharsets.UTF_8, StandardOpenOption.CREATE_NEW);
 
-					Desktop.getDesktop().browse(newFile.toUri());
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			});
+				// set user and start test
+				stats.setUser(name, new LinkedList<String>(lines));
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		});
 	}
 
 	public static void main(String[] args) throws Exception {

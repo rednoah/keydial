@@ -7,14 +7,19 @@ import java.io.InputStream;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.event.EventHandler;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.RotateEvent;
+import javafx.scene.layout.Background;
+import javafx.scene.layout.BackgroundFill;
+import javafx.scene.layout.CornerRadii;
+import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
-import javafx.stage.StageStyle;
 
 public class Main extends Application {
 
@@ -25,11 +30,14 @@ public class Main extends Application {
 	@Override
 	public void start(Stage stage) throws Exception {
 		Watch watch = new Watch();
-		watch.setLayoutX(15);
-		watch.setLayoutY(20);
 
-		stage.setScene(new Scene(watch, Color.TRANSPARENT));
-		stage.initStyle(StageStyle.TRANSPARENT);
+		VBox pane = new VBox(watch, stats.getPrompter());
+		VBox.setMargin(watch, new Insets(20));
+		VBox.setMargin(stats.getPrompter(), new Insets(40));
+		pane.setAlignment(Pos.CENTER);
+		pane.setBackground(new Background(new BackgroundFill(Color.BLACK, new CornerRadii(0), new Insets(0))));
+
+		stage.setScene(new Scene(pane));
 		stage.show();
 
 		// touch input
@@ -80,9 +88,6 @@ public class Main extends Application {
 			case SHIFT:
 				watch.select();
 				break;
-			case TAB:
-				stats.enterUser();
-				break;
 			}
 		});
 
@@ -102,8 +107,5 @@ public class Main extends Application {
 			}
 		});
 		// eventReader.start();
-
-		stats.setUser("USER1");
 	}
-
 }
