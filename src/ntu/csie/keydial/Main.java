@@ -107,8 +107,6 @@ public class Main extends Application {
 	}
 
 	static InputStream getSerialInputStream() throws Exception {
-		// return new FileInputStream("serial.txt");
-
 		// on Mac you may need to run the following commands to make RxTx work
 		// $ sudo mkdir /var/lock
 		// $ sudo chmod 777 /var/lock
