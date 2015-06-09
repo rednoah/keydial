@@ -12,8 +12,6 @@ import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
-import javafx.scene.input.KeyCode;
-import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.RotateEvent;
 import javafx.scene.layout.Background;
@@ -117,7 +115,7 @@ public class Main extends Application {
 		});
 
 		// serial input (on Mac you may need to run the following commands to make RxTx work: sudo mkdir /var/lock && sudo chmod 777 /var/lock)
-		Thread eventReader = new Thread(() -> {
+		Runnable serialPortReader = () -> {
 			try (InputStream in = Serial.connect()) {
 				int b = 0;
 				while ((b = in.read()) > 0) {
@@ -146,9 +144,8 @@ public class Main extends Application {
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
-		});
+		};
 
-		// eventReader.start();
+		// new Thread(serialPortReader).start();
 	}
-
 }
