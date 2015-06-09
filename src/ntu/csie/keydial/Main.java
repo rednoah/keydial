@@ -53,7 +53,7 @@ public class Main extends Application {
 
 		// mouse input
 		stage.getScene().setOnMouseClicked((evt) -> {
-			if (evt.getButton() == MouseButton.PRIMARY)
+			if (evt.getButton() == MouseButton.PRIMARY || evt.getButton() == MouseButton.MIDDLE)
 				watch.enter();
 			if (evt.getButton() == MouseButton.SECONDARY)
 				watch.select();
