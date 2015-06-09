@@ -1,6 +1,5 @@
 package ntu.csie.keydial;
 
-import static java.util.Arrays.*;
 import static java.util.Collections.*;
 
 import java.awt.Desktop;
@@ -27,7 +26,7 @@ public class Stats {
 
 	public static final Stats stats = new Stats();
 
-	private static final int phrasesLimit = 25;
+	private static final int phrasesLimit = 20;
 	private static final String phrasesOutput = "study/phrases-%s.txt";
 
 	private static final Path phrases = Paths.get("study/phrases.txt");
