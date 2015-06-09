@@ -1,4 +1,4 @@
-package ntu.csie.keydial;
+package ntu.csie.keydial.io;
 
 import gnu.io.CommPort;
 import gnu.io.CommPortIdentifier;
@@ -8,10 +8,15 @@ import java.io.InputStream;
 
 public class Serial {
 
+	static final String COMPORT = "COMPORT";
 	static final String DEFAULT_PORT = "/dev/cu.usbmodem1421"; // YOU MAY NEED TO CHANGE THIS
 
-	static InputStream connect() throws Exception {
-		CommPortIdentifier portIdentifier = CommPortIdentifier.getPortIdentifier(DEFAULT_PORT);
+	public static String getDefaultPort() {
+		return System.getenv().getOrDefault(COMPORT, DEFAULT_PORT);
+	}
+
+	public static InputStream open(String port) throws Exception {
+		CommPortIdentifier portIdentifier = CommPortIdentifier.getPortIdentifier(port);
 		if (portIdentifier.isCurrentlyOwned()) {
 			throw new Exception("Port is currently in use");
 		} else {

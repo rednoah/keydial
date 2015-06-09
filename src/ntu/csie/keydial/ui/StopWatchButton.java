@@ -1,4 +1,4 @@
-package ntu.csie.keydial;
+package ntu.csie.keydial.ui;
 
 import javafx.scene.Cursor;
 import javafx.scene.Parent;

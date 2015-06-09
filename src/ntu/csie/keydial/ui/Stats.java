@@ -1,4 +1,4 @@
-package ntu.csie.keydial;
+package ntu.csie.keydial.ui;
 
 import static java.util.Collections.*;
 
@@ -41,6 +41,7 @@ import javafx.scene.text.Text;
 import javafx.scene.text.TextAlignment;
 import javafx.scene.text.TextBoundsType;
 import javafx.stage.Modality;
+import ntu.csie.keydial.prediction.Prediction;
 import uk.ac.shef.wit.simmetrics.similaritymetrics.Levenshtein;
 
 public class Stats {
@@ -48,10 +49,9 @@ public class Stats {
 	public static final Stats stats = new Stats();
 
 	private static final int phrasesLimit = 20;
-	private static final String phrasesOutput = "study/phrases-%s.txt";
 
-	private static final Path phrases = Paths.get("study/phrases.txt");
-	private static final Path records = Paths.get("study/stats.tsv");
+	private static final Path phrases = Paths.get("phrases.txt");
+	private static final Path records = Paths.get("stats.tsv");
 
 	private String user;
 	private Queue<String> lines;
@@ -123,6 +123,7 @@ public class Stats {
 		System.out.println("STATS: " + stats);
 		try {
 			if (!Files.exists(records)) {
+				Files.createDirectories(records.getParent());
 				Files.write(records, singleton(stats.keySet().stream().map(String::toUpperCase).collect(Collectors.joining("\t"))), StandardCharsets.UTF_8);
 			}
 			Files.write(records, singleton(stats.values().stream().map(Objects::toString).collect(Collectors.joining("\t"))), StandardCharsets.UTF_8, StandardOpenOption.APPEND);

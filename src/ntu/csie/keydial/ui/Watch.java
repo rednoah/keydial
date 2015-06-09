@@ -1,9 +1,9 @@
-package ntu.csie.keydial;
+package ntu.csie.keydial.ui;
 
 import static java.util.Arrays.*;
 import static java.util.Collections.*;
 import static java.util.regex.Pattern.*;
-import static ntu.csie.keydial.Stats.*;
+import static ntu.csie.keydial.ui.Stats.*;
 
 import java.util.ArrayList;
 import java.util.EnumSet;
@@ -12,6 +12,7 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.stream.Collectors;
 
+import ntu.csie.keydial.prediction.Prediction;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.geometry.VPos;

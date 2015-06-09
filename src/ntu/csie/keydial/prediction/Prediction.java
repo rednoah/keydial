@@ -1,14 +1,11 @@
-package ntu.csie.keydial;
+package ntu.csie.keydial.prediction;
 
 import static java.util.Collections.*;
 
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Scanner;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.regex.Pattern;
@@ -19,7 +16,7 @@ public class Prediction {
 
 	static final Prediction instance = new Prediction();
 
-	static Prediction getInstance() {
+	public static Prediction getInstance() {
 		return instance;
 	}
 
@@ -87,12 +84,10 @@ public class Prediction {
 	}
 
 	public void readFile(String path) {
-		try {
-			Files.lines(Paths.get(path), StandardCharsets.UTF_8).forEach((s) -> {
-				corpus.compute(s.trim(), (k, c) -> c == null ? 1 : c + 1);
-			});
-		} catch (IOException e) {
-			throw new RuntimeException(e);
+		try (Scanner s = new Scanner(getClass().getResourceAsStream(path), "UTF-8")) {
+			while (s.hasNextLine()) {
+				corpus.compute(s.nextLine().trim(), (k, c) -> c == null ? 1 : c + 1);
+			}
 		}
 	}
 

@@ -1,9 +1,10 @@
-package ntu.csie.keydial;
+package ntu.csie.keydial.ui;
 
-import static ntu.csie.keydial.Stats.*;
+import static ntu.csie.keydial.ui.Stats.*;
 
 import java.io.InputStream;
 
+import ntu.csie.keydial.io.Serial;
 import javafx.animation.Animation.Status;
 import javafx.animation.Timeline;
 import javafx.application.Application;
@@ -116,7 +117,7 @@ public class Main extends Application {
 
 		// serial input (on Mac you may need to run the following commands to make RxTx work: sudo mkdir /var/lock && sudo chmod 777 /var/lock)
 		Runnable serialPortReader = () -> {
-			try (InputStream in = Serial.connect()) {
+			try (InputStream in = Serial.open(Serial.getDefaultPort())) {
 				int b = 0;
 				while ((b = in.read()) > 0) {
 					final char code = (char) b;
@@ -146,6 +147,6 @@ public class Main extends Application {
 			}
 		};
 
-		// new Thread(serialPortReader).start();
+		new Thread(serialPortReader).start();
 	}
 }
