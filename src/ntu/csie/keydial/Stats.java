@@ -122,7 +122,10 @@ public class Stats {
 
 		System.out.println("STATS: " + stats);
 		try {
-			Files.write(records, singleton(stats.values().stream().map(Objects::toString).collect(Collectors.joining("\t"))), StandardCharsets.UTF_8, StandardOpenOption.CREATE, StandardOpenOption.APPEND);
+			if (!Files.exists(records)) {
+				Files.write(records, singleton(stats.keySet().stream().map(String::toUpperCase).collect(Collectors.joining("\t"))), StandardCharsets.UTF_8);
+			}
+			Files.write(records, singleton(stats.values().stream().map(Objects::toString).collect(Collectors.joining("\t"))), StandardCharsets.UTF_8, StandardOpenOption.APPEND);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -168,15 +171,9 @@ public class Stats {
 		dialog.setHeaderText("Start Test");
 		dialog.showAndWait().ifPresent(name -> {
 			try {
-				// create user-specific test set
-				Path newFile = Paths.get(String.format(phrasesOutput, name));
-
 				List<String> lines = Files.lines(phrases, StandardCharsets.UTF_8).collect(Collectors.toList());
-
 				shuffle(lines, new SecureRandom());
 				lines = lines.subList(0, phrasesLimit);
-
-				Files.write(newFile, lines, StandardCharsets.UTF_8, StandardOpenOption.CREATE_NEW);
 
 				// set user and start test
 				stats.setUser(name, new LinkedList<String>(lines));
