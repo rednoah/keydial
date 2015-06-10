@@ -16,7 +16,6 @@ import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Queue;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -77,7 +76,13 @@ public class Stats {
 		this.input = lines.poll();
 
 		if (prompter != null) {
-			prompter.setText(input != null ? input : "COMPLETE");
+			if (input != null) {
+				counter.setText(String.format("(%d)", lines.size() + 1));
+				prompter.setText(input);
+			} else {
+				counter.setText("");
+				prompter.setText("COMPLETE");
+			}
 		}
 	}
 
@@ -144,6 +149,7 @@ public class Stats {
 
 	private HBox prompterNode;
 	private Text prompter;
+	private Text counter;
 
 	public Node getPrompter() {
 		if (prompterNode == null) {
@@ -158,10 +164,17 @@ public class Stats {
 			prompter.setCursor(Cursor.HAND);
 			prompter.setOnMouseClicked(evt -> stats.enterUser((Node) evt.getSource()));
 
-			prompterNode = new HBox();
+			counter = new Text();
+			counter.setFont(Font.font(Font.getDefault().getName(), 16));
+			counter.setFill(Color.GRAY);
+			counter.setBoundsType(TextBoundsType.VISUAL);
+			counter.setTextAlignment(TextAlignment.CENTER);
+			counter.setTextOrigin(VPos.BOTTOM);
+			counter.setWrappingWidth(100);
+
+			prompterNode = new HBox(counter, prompter);
 			prompterNode.setBackground(new Background(new BackgroundFill(Color.WHITE, new CornerRadii(5), new Insets(0))));
 			prompterNode.setBorder(new Border(new BorderStroke(Color.BLACK, BorderStrokeStyle.SOLID, new CornerRadii(5), new BorderWidths(1), new Insets(0))));
-			prompterNode.getChildren().addAll(prompter);
 			prompterNode.setAlignment(Pos.CENTER);
 			prompterNode.setMaxWidth(700);
 			HBox.setMargin(prompter, new Insets(20));
