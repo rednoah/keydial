@@ -55,10 +55,10 @@ public class Watch extends Parent {
 			List<String> getKeys(String input) {
 				List<String> keys = new ArrayList<String>();
 				keys.add(RETURN);
-				keys.add(SPACE);
 				for (char c = 'A'; c <= 'Z'; c++) {
 					keys.add(String.valueOf(c));
 				}
+				keys.add(SPACE);
 				keys.add(HASH);
 				keys.add(SMILEY);
 				keys.add(BACKSPACE);
