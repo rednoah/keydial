@@ -62,10 +62,6 @@ public class Stats {
 	private Instant start;
 	private Instant end;
 
-	public String normalize(String s) {
-		return s.trim().toLowerCase();
-	}
-
 	public void reset() {
 		output = null;
 		record = new ArrayList<String>();
@@ -95,27 +91,30 @@ public class Stats {
 		System.out.println("START_RECORD: " + start);
 	}
 
-	public void record(String s) {
-		record.add(s);
+	public void record(String string) {
+		record.add(string);
 	}
 
-	public void endRecord(String s) {
+	public void endRecord(String string) {
 		if (start == null || input == null)
 			return;
 
-		output = s;
+		output = string;
 		end = Instant.now();
 
 		// record
 		Map<String, Object> stats = new LinkedHashMap<String, Object>();
 		stats.put("user", user);
 		stats.put("wpm", ((double) output.length() / 5) / ((double) Duration.between(start, end).toMillis() / 60000));
-		stats.put("cps", output.length() / ((double) Duration.between(start, end).toMillis() / 1000));
+		stats.put("cps", (double) output.length() / ((double) Duration.between(start, end).toMillis() / 1000));
 		stats.put("duration", Duration.between(start, end).toMillis());
 		stats.put("entered", record.stream().filter((it) -> !Watch.CONTROL_KEYS.contains(it)).count());
 		stats.put("deleted", record.stream().filter((it) -> it.equals(Watch.BACKSPACE)).count());
-		stats.put("distance", new Levenshtein().getSimilarity(normalize(input), normalize(output)));
+		stats.put("similarity", (double) new Levenshtein().getSimilarity(input.toLowerCase(), output.toLowerCase()));
+		stats.put("distance", (int) new Levenshtein().getUnNormalisedSimilarity(input.toLowerCase(), output.toLowerCase()));
 		stats.put("date", start);
+		stats.put("input_length", input.length());
+		stats.put("output_length", output.length());
 		stats.put("input", input);
 		stats.put("output", output);
 		stats.put("record", record);
@@ -123,10 +122,14 @@ public class Stats {
 		System.out.println("STATS: " + stats);
 		try {
 			if (!Files.exists(records)) {
-				Files.createDirectories(records.getParent());
 				Files.write(records, singleton(stats.keySet().stream().map(String::toUpperCase).collect(Collectors.joining("\t"))), StandardCharsets.UTF_8);
 			}
-			Files.write(records, singleton(stats.values().stream().map(Objects::toString).collect(Collectors.joining("\t"))), StandardCharsets.UTF_8, StandardOpenOption.APPEND);
+			Files.write(records, singleton(stats.values().stream().map(s -> {
+				if (s instanceof Double || s instanceof Float) {
+					return String.format("%.2f", s);
+				}
+				return s.toString();
+			}).collect(Collectors.joining("\t"))), StandardCharsets.UTF_8, StandardOpenOption.APPEND);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -173,7 +176,7 @@ public class Stats {
 		dialog.setHeaderText("Start Test");
 		dialog.showAndWait().ifPresent(name -> {
 			try {
-				List<String> lines = Files.lines(phrases, StandardCharsets.UTF_8).collect(Collectors.toList());
+				List<String> lines = Files.lines(phrases, StandardCharsets.UTF_8).map(String::trim).collect(Collectors.toList());
 				shuffle(lines, new SecureRandom());
 				lines = lines.subList(0, phrasesLimit);
 
