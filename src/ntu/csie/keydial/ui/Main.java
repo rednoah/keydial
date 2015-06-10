@@ -81,6 +81,8 @@ public class Main extends Application {
 		stage.getScene().setOnKeyPressed((evt) -> {
 			switch (evt.getCode()) {
 			case SPACE:
+			case ENTER:
+			case UP:
 				watch.enter();
 				break;
 			case RIGHT:
@@ -96,6 +98,9 @@ public class Main extends Application {
 				}
 				break;
 			case SHIFT:
+			case TAB:
+			case CONTROL:
+			case DOWN:
 				watch.select();
 				break;
 			default:
