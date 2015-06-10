@@ -107,10 +107,9 @@ public class Watch extends Parent {
 
 			@Override
 			List<String> getKeys(String input) {
-				int offset = 6;
-				int n = 12;
-				List<String> options = Prediction.getInstance().completeSentence(input, offset + n);
-				return options.stream().skip(offset).limit(n).sorted(String.CASE_INSENSITIVE_ORDER).collect(Collectors.toList());
+				int offset = 6, skip = 0, limit = 12;
+				List<String> options = Prediction.getInstance().completeSentence(input, 30);
+				return options.stream().skip(offset).sorted(String.CASE_INSENSITIVE_ORDER).skip(skip).limit(limit).collect(Collectors.toList());
 			}
 		},
 
@@ -118,10 +117,9 @@ public class Watch extends Parent {
 
 			@Override
 			List<String> getKeys(String input) {
-				int offset = 6 + 12;
-				int n = 12;
-				List<String> options = Prediction.getInstance().completeSentence(input, offset + n);
-				return options.stream().skip(offset).limit(n).sorted(String.CASE_INSENSITIVE_ORDER).collect(Collectors.toList());
+				int offset = 6, skip = 12, limit = 12;
+				List<String> options = Prediction.getInstance().completeSentence(input, 30);
+				return options.stream().skip(offset).sorted(String.CASE_INSENSITIVE_ORDER).skip(skip).limit(limit).collect(Collectors.toList());
 			}
 		};
 
