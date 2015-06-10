@@ -158,14 +158,8 @@ public class Watch extends Parent {
 	void setMode(Mode mode, int index) {
 		if (PREDICTION_MODES.contains(mode) && mode.getKeys(buffer).isEmpty()) {
 			// force alpha mode if no prediction are available
-			mode = DEFAULT_MODE;
-			// or cycle back to previous prediction level that still had predictions available
-			for (Mode it : PREDICTION_MODES) {
-				if (it.getKeys(buffer).size() > 0) {
-					mode = it;
-					break;
-				}
-			}
+			setMode(DEFAULT_MODE, 0);
+			return;
 		}
 
 		// update state
