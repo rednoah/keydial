@@ -38,7 +38,7 @@ public class Main extends Application {
 		pane.setAlignment(Pos.CENTER);
 		pane.setBackground(new Background(new BackgroundFill(Color.BLACK, new CornerRadii(0), new Insets(0))));
 
-		stage.setScene(new Scene(pane));
+		stage.setScene(new Scene(pane, 700, 500, Color.BLACK));
 		stage.show();
 
 		// touch input
