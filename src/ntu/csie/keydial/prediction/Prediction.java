@@ -42,7 +42,14 @@ public class Prediction {
 	public List<String> completeSentence(String s, int limit) {
 		String prefix = getLastWord(s);
 		if (prefix.length() > 0) {
-			List<String> options = completeWord(prefix, limit);
+			List<String> options = completeWord(prefix, limit).stream().map(it -> {
+				if (SPACE.matcher(it).find() && it.contains(prefix)) {
+					return it.substring(it.indexOf(prefix) + prefix.length(), it.length()).trim();
+				} else {
+					return it;
+				}
+			}).collect(Collectors.toList());
+
 			if (options.size() > 0) {
 				return options;
 			}
@@ -66,9 +73,9 @@ public class Prediction {
 				Set<String> letters = new HashSet<String>();
 				for (String it : options) {
 					if (it.length() > prefix.length()) {
-						String letter = it.substring(prefix.length(), prefix.length() + 1).toUpperCase();
+						String letter = it.substring(prefix.length(), prefix.length() + 1);
 						if (ALPHA.matcher(letter).matches()) {
-							letters.add(letter);
+							letters.add(letter.toUpperCase());
 						}
 					}
 				}
