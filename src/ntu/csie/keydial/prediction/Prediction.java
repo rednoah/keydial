@@ -24,14 +24,16 @@ public class Prediction {
 
 	TreeMap<String, Integer> corpus = new TreeMap<String, Integer>(String.CASE_INSENSITIVE_ORDER);
 
-	Pattern SENTENCE = Pattern.compile("^.*\\w+$", Pattern.CASE_INSENSITIVE);
+	Pattern SENTENCE = Pattern.compile("^.*\\w+\\s?$", Pattern.CASE_INSENSITIVE);
 	Pattern SPACE = Pattern.compile("\\s+");
+	Pattern ALPHA = Pattern.compile("[A-Z]+", Pattern.CASE_INSENSITIVE);
 
 	public String getLastWord(String s) {
 		if (SENTENCE.matcher(s).matches()) {
 			String[] input = SPACE.split(s);
 			if (input.length > 0) {
-				return input[input.length - 1];
+				String word = input[input.length - 1];
+				return s.substring(s.lastIndexOf(word));
 			}
 		}
 		return "";
@@ -43,11 +45,9 @@ public class Prediction {
 			List<String> options = completeWord(prefix, limit);
 			if (options.size() > 0) {
 				return options;
-			} else {
-				return singletonList(prefix);
 			}
 		}
-		return emptyList();
+		return ALPHA.matcher(prefix).matches() ? singletonList(prefix) : emptyList();
 	}
 
 	public List<String> completeWord(String s, int limit) {
@@ -67,7 +67,7 @@ public class Prediction {
 				for (String it : options) {
 					if (it.length() > prefix.length()) {
 						String letter = it.substring(prefix.length(), prefix.length() + 1).toUpperCase();
-						if (letter.matches("[A-Z]")) {
+						if (ALPHA.matcher(letter).matches()) {
 							letters.add(letter);
 						}
 					}
