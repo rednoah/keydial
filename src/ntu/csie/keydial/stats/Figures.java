@@ -48,6 +48,8 @@ public class Figures extends Application {
 		pane.getChildren().add(AverageWordsPerMinuteByTrialNumber());
 		pane.getChildren().add(AverageWordsPerMinuteByUser());
 		pane.getChildren().add(AverageWordsPerMinuteForAllUsers());
+		pane.getChildren().add(TotalTypedWordsForAllUsers());
+		pane.getChildren().add(AverageEditDistanceForAllUsers());
 
 		stage.setScene(new Scene(pane, 800, 800, Color.TRANSPARENT));
 		stage.initStyle(StageStyle.DECORATED);
@@ -90,7 +92,38 @@ public class Figures extends Application {
 			max.getData().add(new XYChart.Data<String, Number>(u.toString(), r.stream().mapToDouble(Record::getWPM).max().orElse(0)));
 		});
 
-		return createBarChart("User", "WPM", 0, 20, asList(min, max, avg));
+		return createBarChart("User", "WPM", 0, 20, 1, asList(min, max, avg));
+	}
+
+	Chart TotalTypedWordsForAllUsers() {
+		BarChart.Series<String, Number> tokens = new BarChart.Series<>();
+		BarChart.Series<String, Number> chars = new BarChart.Series<>();
+		tokens.setName("Selected characters or completions");
+		chars.setName("Typed characters");
+
+		records.stream().collect(groupingBy(Record::getUserNumber)).forEach((u, r) -> {
+			double entered = r.stream().mapToDouble(Record::getEntered).sum();
+			double outputLength = r.stream().mapToDouble(it -> it.getOutput().length()).sum();
+
+			tokens.getData().add(new XYChart.Data<String, Number>(u.toString(), entered));
+			chars.getData().add(new XYChart.Data<String, Number>(u.toString(), outputLength));
+		});
+
+		return createBarChart("Users", "Number of input keys", 0, 700, 100, asList(tokens, chars));
+	}
+
+	Chart AverageEditDistanceForAllUsers() {
+		BarChart.Series<String, Number> edits = new BarChart.Series<>();
+		BarChart.Series<String, Number> deletes = new BarChart.Series<>();
+		edits.setName("Edit Distance");
+		deletes.setName("Delete Count");
+
+		records.stream().collect(groupingBy(Record::getUserNumber)).forEach((u, r) -> {
+			edits.getData().add(new XYChart.Data<String, Number>(u.toString(), r.stream().mapToDouble(Record::getDistance).average().orElse(0)));
+			deletes.getData().add(new XYChart.Data<String, Number>(u.toString(), r.stream().mapToDouble(Record::getDeleted).average().orElse(0)));
+		});
+
+		return createBarChart("Users", "Characters", 0, 5, 1, asList(edits, deletes));
 	}
 
 	Chart createLineChart(String xLabel, double xLower, double xUpper, String yLabel, double yLower, double yUpper, Iterable<LineChart.Series<Number, Number>> series) {
@@ -105,10 +138,10 @@ public class Figures extends Application {
 		return chart;
 	}
 
-	Chart createBarChart(String xLabel, String yLabel, double yLower, double yUpper, Iterable<BarChart.Series<String, Number>> series) {
+	Chart createBarChart(String xLabel, String yLabel, double yLower, double yUpper, double yTick, Iterable<BarChart.Series<String, Number>> series) {
 		CategoryAxis xAxis = new CategoryAxis();
 		xAxis.setLabel(xLabel);
-		NumberAxis yAxis = new NumberAxis(yLabel, yLower, yUpper, 1);
+		NumberAxis yAxis = new NumberAxis(yLabel, yLower, yUpper, yTick);
 		BarChart<String, Number> chart = new BarChart<>(xAxis, yAxis);
 		for (BarChart.Series<String, Number> it : series) {
 			chart.getData().add(it);
