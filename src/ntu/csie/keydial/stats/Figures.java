@@ -109,7 +109,7 @@ public class Figures extends Application {
 			chars.getData().add(new XYChart.Data<String, Number>(u.toString(), outputLength));
 		});
 
-		return createBarChart("Users", "Number of input keys", 0, 700, 100, asList(tokens, chars));
+		return createBarChart("User", "Number of input keys", 0, 700, 100, asList(tokens, chars));
 	}
 
 	Chart AverageEditDistanceForAllUsers() {
@@ -123,7 +123,7 @@ public class Figures extends Application {
 			deletes.getData().add(new XYChart.Data<String, Number>(u.toString(), r.stream().mapToDouble(Record::getDeleted).average().orElse(0)));
 		});
 
-		return createBarChart("Users", "Characters", 0, 5, 1, asList(edits, deletes));
+		return createBarChart("User", "Characters", 0, 5, 1, asList(edits, deletes));
 	}
 
 	Chart createLineChart(String xLabel, double xLower, double xUpper, String yLabel, double yLower, double yUpper, Iterable<LineChart.Series<Number, Number>> series) {
