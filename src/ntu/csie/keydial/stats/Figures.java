@@ -46,12 +46,12 @@ public class Figures extends Application {
 		pane.setBackground(new Background(new BackgroundFill(Color.TRANSPARENT, new CornerRadii(0), new Insets(0))));
 
 		pane.getChildren().add(AverageWordsPerMinuteByTrialNumber());
-		pane.getChildren().add(AverageWordsPerMinutebyUser());
+		pane.getChildren().add(AverageWordsPerMinuteByUser());
+		pane.getChildren().add(AverageWordsPerMinuteForAllUsers());
 
-		stage.setScene(new Scene(pane, 800, 600, Color.TRANSPARENT));
+		stage.setScene(new Scene(pane, 800, 800, Color.TRANSPARENT));
 		stage.initStyle(StageStyle.DECORATED);
 		// stage.initStyle(StageStyle.TRANSPARENT);
-		stage.centerOnScreen();
 		stage.show();
 	}
 
@@ -65,7 +65,18 @@ public class Figures extends Application {
 		return createLineChart("Trial Number", 1, 20, "WPM", 0, 10, singleton(series));
 	}
 
-	Chart AverageWordsPerMinutebyUser() {
+	Chart AverageWordsPerMinuteForAllUsers() {
+		List<XYChart.Series<Number, Number>> users = new ArrayList<XYChart.Series<Number, Number>>();
+		records.stream().collect(groupingBy(Record::getUser)).forEach((u, r) -> {
+			XYChart.Series<Number, Number> series = new XYChart.Series<>();
+			r.forEach(it -> series.getData().add(new XYChart.Data<Number, Number>(it.getTrialNumber(), it.getWPM())));
+			users.add(series);
+		});
+
+		return createLineChart("Trial Number", 1, 20, "WPM", 0, 20, users);
+	}
+
+	Chart AverageWordsPerMinuteByUser() {
 		BarChart.Series<String, Number> avg = new BarChart.Series<>();
 		BarChart.Series<String, Number> min = new BarChart.Series<>();
 		BarChart.Series<String, Number> max = new BarChart.Series<>();
