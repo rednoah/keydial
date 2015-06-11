@@ -1,4 +1,4 @@
-package ntu.csie.keydial.ui;
+package ntu.csie.keydial.stats;
 
 import static java.util.Collections.*;
 
@@ -17,6 +17,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
+import java.util.Scanner;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -41,6 +42,7 @@ import javafx.scene.text.TextAlignment;
 import javafx.scene.text.TextBoundsType;
 import javafx.stage.Modality;
 import ntu.csie.keydial.prediction.Prediction;
+import ntu.csie.keydial.ui.Watch;
 import uk.ac.shef.wit.simmetrics.similaritymetrics.Levenshtein;
 
 public class Stats {
@@ -48,8 +50,6 @@ public class Stats {
 	public static final Stats stats = new Stats();
 
 	private static final int phrasesLimit = 20;
-
-	private static final Path phrases = Paths.get("phrases.txt");
 	private static final Path records = Paths.get("stats.tsv");
 
 	private String user;
@@ -189,20 +189,37 @@ public class Stats {
 		dialog.setHeaderText("Start Test");
 		dialog.showAndWait().ifPresent(name -> {
 			try {
-				List<String> lines = Files.lines(phrases, StandardCharsets.UTF_8).map(String::trim).collect(Collectors.toList());
-				shuffle(lines, new SecureRandom());
-				lines = lines.subList(0, phrasesLimit);
-
 				// set user and start test
-				stats.setUser(name, new LinkedList<String>(lines));
+				stats.setUser(name, getPhrasesForUserTrial());
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
 		});
 	}
 
+	public Queue<String> getPhrasesForUserTrial() {
+		List<String> phrases = getPhrases();
+
+		shuffle(phrases, new SecureRandom());
+
+		return new LinkedList<String>(phrases.subList(0, phrasesLimit));
+	}
+
+	public List<String> getPhrases() {
+		List<String> phrases = new ArrayList<String>();
+		try (Scanner in = new Scanner(getClass().getResourceAsStream("phrases.txt"), "UTF-8")) {
+			while (in.hasNextLine()) {
+				String line = in.nextLine().replaceAll("\\s+", " ").trim();
+				if (line.length() > 0) {
+					phrases.add(line);
+				}
+			}
+		}
+		return phrases;
+	}
+
 	public static void main(String[] args) throws Exception {
-		Files.lines(phrases, StandardCharsets.UTF_8).flatMap(it -> Stream.of(it.trim().split("\\s+"))).map(String::toLowerCase).sorted().distinct().map(s -> {
+		stats.getPhrases().stream().flatMap(it -> Stream.of(it.trim().split("\\s+"))).map(String::toLowerCase).sorted().distinct().map(s -> {
 			List<String> line = new ArrayList<String>();
 			line.add(s);
 

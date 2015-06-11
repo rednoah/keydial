@@ -3,7 +3,7 @@ package ntu.csie.keydial.ui;
 import static java.util.Arrays.*;
 import static java.util.Collections.*;
 import static java.util.regex.Pattern.*;
-import static ntu.csie.keydial.ui.Stats.*;
+import static ntu.csie.keydial.stats.Stats.*;
 
 import java.util.ArrayList;
 import java.util.EnumSet;
@@ -13,6 +13,7 @@ import java.util.regex.Matcher;
 import java.util.stream.Collectors;
 
 import ntu.csie.keydial.prediction.Prediction;
+import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.geometry.VPos;
@@ -38,14 +39,14 @@ public class Watch extends Parent {
 	static final Font EMOJI_FONT = Font.loadFont(Dial.class.getResourceAsStream("OpenSansEmoji.ttf"), 24);
 	static final Font PREDICTION_FONT = new Font(12);
 
-	static final String RETURN = "⏎";
-	static final String SPACE = "⌴";
-	static final String HASH = "#";
-	static final String SMILEY = "😀";
-	static final String BACKSPACE = "⌫";
-	static final String CARET = "_";
+	public static final String RETURN = "⏎";
+	public static final String SPACE = "⌴";
+	public static final String HASH = "#";
+	public static final String SMILEY = "😀";
+	public static final String BACKSPACE = "⌫";
+	public static final String CARET = "_";
 
-	static final List<String> CONTROL_KEYS = asList(RETURN, HASH, SMILEY, BACKSPACE);
+	public static final List<String> CONTROL_KEYS = asList(RETURN, HASH, SMILEY, BACKSPACE);
 
 	enum Mode {
 
@@ -411,7 +412,7 @@ public class Watch extends Parent {
 
 	Timeline repeater(Runnable r) {
 		Timeline time = new Timeline();
-		time.setCycleCount(Timeline.INDEFINITE);
+		time.setCycleCount(Animation.INDEFINITE);
 		time.setDelay(Duration.millis(100));
 		KeyFrame f = new KeyFrame(Duration.millis(30), evt -> {
 			r.run();

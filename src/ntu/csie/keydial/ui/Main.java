@@ -1,6 +1,6 @@
 package ntu.csie.keydial.ui;
 
-import static ntu.csie.keydial.ui.Stats.*;
+import static ntu.csie.keydial.stats.Stats.*;
 
 import java.io.InputStream;
 
