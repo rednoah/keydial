@@ -43,8 +43,8 @@ public class Prediction {
 		String prefix = getLastWord(s);
 		if (prefix.length() > 0) {
 			List<String> options = completeWord(prefix, limit).stream().map(it -> {
-				if (SPACE.matcher(it).find() && it.contains(prefix)) {
-					return it.substring(it.indexOf(prefix) + prefix.length(), it.length()).trim();
+				if (SPACE.matcher(it).find() && it.toLowerCase().contains(prefix.toLowerCase())) {
+					return it.substring(it.toLowerCase().indexOf(prefix.toLowerCase()) + prefix.length(), it.length()).trim();
 				} else {
 					return it;
 				}
@@ -67,7 +67,7 @@ public class Prediction {
 
 	public Set<String> guessNextCharacter(String s, int limit) {
 		String prefix = getLastWord(s);
-		if (prefix.length() > 0) {
+		if (ALPHA.matcher(prefix).matches()) {
 			List<String> options = completeWord(prefix, limit);
 			if (options.size() > 0) {
 				Set<String> letters = new HashSet<String>();

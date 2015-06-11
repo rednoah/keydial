@@ -417,7 +417,7 @@ public class Watch extends Parent {
 		Timeline time = new Timeline();
 		time.setCycleCount(Animation.INDEFINITE);
 		time.setDelay(Duration.millis(100));
-		KeyFrame f = new KeyFrame(Duration.millis(30), evt -> {
+		KeyFrame f = new KeyFrame(Duration.millis(40), evt -> {
 			r.run();
 		});
 		time.getKeyFrames().add(f);
