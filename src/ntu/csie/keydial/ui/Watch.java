@@ -10,6 +10,7 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
 import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import ntu.csie.keydial.prediction.Prediction;
@@ -45,6 +46,8 @@ public class Watch extends Parent {
 	public static final String SMILEY = "😀";
 	public static final String BACKSPACE = "⌫";
 	public static final String CARET = "_";
+
+	Pattern ALPHA = Pattern.compile("[A-Z]+", Pattern.CASE_INSENSITIVE);
 
 	public static final List<String> CONTROL_KEYS = asList(RETURN, HASH, SMILEY, BACKSPACE);
 
@@ -221,7 +224,7 @@ public class Watch extends Parent {
 				setMode(DEFAULT_MODE, 0);
 			} else {
 				buffer = buffer + key.toLowerCase();
-				setMode(DEFAULT_MODE, index);
+				setMode(DEFAULT_MODE, ALPHA.matcher(key).matches() ? index : 0);
 			}
 		}
 
