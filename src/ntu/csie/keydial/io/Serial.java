@@ -9,7 +9,7 @@ import java.io.InputStream;
 public class Serial {
 
 	static final String COMPORT = "COMPORT";
-	static final String DEFAULT_PORT = "/dev/cu.usbmodem1421"; // YOU MAY NEED TO CHANGE THIS
+	static final String DEFAULT_PORT = "/dev/tty.usbmodem1411"; // YOU MAY NEED TO CHANGE THIS
 
 	public static String getDefaultPort() {
 		return System.getenv().getOrDefault(COMPORT, DEFAULT_PORT);
